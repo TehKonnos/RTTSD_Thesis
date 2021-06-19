@@ -15,10 +15,10 @@ limitations under the License.
 
 package thesis.rttsd_thesis.customview;
 
-import org.tensorflow.lite.examples.classification.tflite.Classifier.Recognition;
-
 import java.util.List;
 
+import thesis.rttsd_thesis.Detection.Detector;
+
 public interface ResultsView {
-  public void setResults(final List<Recognition> results);
+  public void setResults(final List<Detector.Recognition> results);
 }

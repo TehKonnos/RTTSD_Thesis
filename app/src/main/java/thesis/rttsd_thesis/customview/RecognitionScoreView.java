@@ -22,12 +22,12 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
 
+import thesis.rttsd_thesis.Detection.Detector.Recognition;
+
 import java.util.List;
 
-import thesis.rttsd_thesis.classifier.Classifier.Recognition;
-
 public class RecognitionScoreView extends View implements ResultsView {
-  private static final float TEXT_SIZE_DIP = 16;
+  private static final float TEXT_SIZE_DIP = 14;
   private final float textSizePx;
   private final Paint fgPaint;
   private final Paint bgPaint;
