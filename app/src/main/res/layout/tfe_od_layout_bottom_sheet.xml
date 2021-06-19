@@ -98,6 +98,7 @@
             android:gravity="right"
             android:text="640*480"
             android:textColor="@android:color/black" />
+        <!-- FPS + Frame, Sound Notification, Threads*, Inference Time -->
     </LinearLayout>
 
     <View

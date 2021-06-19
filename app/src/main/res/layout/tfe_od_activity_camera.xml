@@ -42,7 +42,7 @@
             android:layout_alignParentTop="true"
             android:background="@color/tfe_semi_transparent">
 
-            <!-- Edw tha mpei i current taxitita-->
+            <!-- Sign + Speed Km/h-->
         </androidx.appcompat.widget.Toolbar>
 
     </RelativeLayout>
