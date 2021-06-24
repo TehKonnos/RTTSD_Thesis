@@ -106,10 +106,10 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
     for (Detection detection : results) {
       recognitions.add(
           new Recognition(
-              "" + cnt++,
-              detection.getCategories().get(0).getLabel(),
-              detection.getCategories().get(0).getScore(),
-              detection.getBoundingBox()));
+              "" + cnt++, //id
+              detection.getCategories().get(0).getLabel(), // title
+              detection.getCategories().get(0).getScore(), //confidence
+              detection.getBoundingBox())); //location
     }
     Trace.endSection(); // "recognizeImage"
     return recognitions;

@@ -25,23 +25,34 @@ import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.location.Location;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 import android.widget.Toast;
 
 
+import androidx.annotation.NonNull;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import thesis.rttsd_thesis.Detection.Detector;
 import thesis.rttsd_thesis.Detection.TFLiteObjectDetectionAPIModel;
+import thesis.rttsd_thesis.adapter.SignAdapter;
 import thesis.rttsd_thesis.customview.OverlayView;
 import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
+import thesis.rttsd_thesis.model.entity.SignEntity;
 import thesis.rttsd_thesis.tracking.MultiBoxTracker;
 
 /**
@@ -83,6 +94,29 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private MultiBoxTracker tracker;
 
   private BorderedText borderedText;
+
+  private SignAdapter adapter;
+  private final String SIGN_LIST = "sign_list";
+
+
+  protected void onSaveInstanceState(@NonNull Bundle outState) {
+    super.onSaveInstanceState(outState);
+    outState.putString(SIGN_LIST, new Gson().toJson(adapter.getSigns()));
+  }
+
+  protected void onRestoreInstanceState(Bundle savedInstanceState) {
+    super.onRestoreInstanceState(savedInstanceState);
+    String json = savedInstanceState.getString(SIGN_LIST);
+    ArrayList<SignEntity> items = null;
+    try {
+      items = (new Gson()).fromJson(json, new TypeToken<ArrayList<SignEntity>>() {
+      }.getType());
+    } catch (Exception ignored) {
+      items = new ArrayList<>();
+    }
+    adapter.setSigns(items);
+
+  }
 
   @Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {
@@ -209,6 +243,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                 result.setLocation(location);
                 mappedRecognitions.add(result);
+
+                runOnUiThread(() -> updateSignList(result, croppedBitmap));
               }
             }
 
@@ -228,6 +264,51 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 });
           }
         });
+  }
+
+  private void updateSignList(TFLiteObjectDetectionAPIModel.Recognition result, Bitmap bitmap) {
+
+    SignEntity sign = getSignImage(result, bitmap);
+
+    ArrayList<SignEntity> list = new ArrayList<>(adapter.getSigns());
+
+    if (list.isEmpty()) {
+      addSignToAdapter(sign);
+      return;
+    }
+    if (list.contains(sign)) {
+      if (isRemoveValid(sign, list.get(list.indexOf(sign)))) {
+        adapter.getSigns().remove(sign);
+        addSignToAdapter(sign);
+      }
+    } else {
+      addSignToAdapter(sign);
+    }
+
+  }
+
+  private void addSignToAdapter(SignEntity sign) {
+    adapter.setSign(sign);
+    /* if (notification.isChecked()) {
+      mediaPlayerHolder.loadMedia(sign.getSoundNotification());
+    } */
+  }
+
+  private boolean isRemoveValid(SignEntity sign1, SignEntity sign2) {
+    return isTimeDifferenceValid(sign1.getDate(), sign2.getDate())
+            || isLocationDifferenceValid(sign1.getLocation(), sign2.getLocation());
+  }
+
+  private boolean isTimeDifferenceValid(Date date1, Date date2) {
+    long milliseconds = date1.getTime() - date2.getTime();
+    Log.i("sign", "isTimeDifferenceValid " + ((milliseconds / (1000)) > 30));
+    return (int) (milliseconds / (1000)) > 30;
+  }
+
+  private boolean isLocationDifferenceValid(Location location1, Location location2) {
+    if (location1 == null || location2 == null)
+      return false;
+    return location1.distanceTo(location2) > 50;
   }
 
   @Override
