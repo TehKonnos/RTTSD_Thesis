@@ -18,11 +18,12 @@ package thesis.rttsd_thesis.Detection;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
 
+import java.io.IOException;
 import java.util.List;
 
 /** Generic interface for interacting with different recognition engines. */
 public interface Detector {
-  List<Recognition> recognizeImage(Bitmap bitmap);
+  List<Recognition> recognizeImage(Bitmap bitmap) throws IOException;
 
   void enableStatLogging(final boolean debug);
 
@@ -31,6 +32,7 @@ public interface Detector {
   void close();
 
   void setNumThreads(int numThreads);
+
 
   void setUseNNAPI(boolean isChecked);
 

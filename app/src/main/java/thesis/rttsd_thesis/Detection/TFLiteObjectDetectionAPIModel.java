@@ -17,6 +17,8 @@ package thesis.rttsd_thesis.Detection;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.os.SystemClock;
 import android.os.Trace;
 
 
@@ -28,9 +30,15 @@ import java.util.List;
 
 import org.tensorflow.lite.*;
 import org.tensorflow.lite.support.common.FileUtil;
+import org.tensorflow.lite.support.common.TensorOperator;
 import org.tensorflow.lite.support.image.TensorImage;
 import org.tensorflow.lite.task.vision.detector.Detection;
 import org.tensorflow.lite.task.vision.detector.ObjectDetector;
+
+import thesis.rttsd_thesis.Classifier;
+import thesis.rttsd_thesis.env.ImageUtils;
+
+import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
 
 /**
  * Wrapper for frozen detection models trained using the Tensorflow Object Detection API: -
@@ -75,6 +83,18 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
    * @param inputSize The size of image input
    * @param isQuantized Boolean representing model is quantized or not
    */
+
+  private Classifier classifier;
+  private Bitmap rgbFrameBitmap = null;
+  private long lastProcessingTimeMs;
+  private int[] rgbBytes = null;
+  private Runnable imageConverter;
+  private int numThreads;
+
+  private static final String TFLITE = "43signs.tflite";
+  private static final String LABELS = "43signs.txt";
+
+
   public static Detector create(
       final Context context,
       final String modelFilename,
@@ -92,7 +112,7 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
   }
 
   @Override
-  public List<Recognition> recognizeImage(final Bitmap bitmap) {
+  public List<Recognition> recognizeImage(final Bitmap bitmap) throws IOException {
     // Log this method so that it can be analyzed with systrace.
     Trace.beginSection("recognizeImage");
     List<Detection> results = objectDetector.detect(TensorImage.fromBitmap(bitmap));
@@ -104,6 +124,48 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
     final ArrayList<Recognition> recognitions = new ArrayList<>();
     int cnt = 0;
     for (Detection detection : results) {
+
+      if (detection != null) {
+        classifier = new Classifier(null, Classifier.Device.GPU, numThreads) {
+          @Override
+          protected String getModelPath() {
+            return TFLITE;
+          }
+
+          @Override
+          protected String getLabelPath() {
+            return LABELS;
+          }
+
+          @Override
+          protected TensorOperator getPreprocessNormalizeOp() {
+            return null;
+          }
+
+          @Override
+          protected TensorOperator getPostprocessNormalizeOp() {
+            return null;
+          }
+        };
+
+        Matrix matrix = new Matrix();
+        matrix.postRotate(90);
+        Bitmap crop = Bitmap.createBitmap(rgbFrameBitmap,
+                (int) detection.getBoundingBox().left,
+                (int) detection.getBoundingBox().top,
+                (int) detection.getBoundingBox().width(),
+                (int) detection.getBoundingBox().height(),
+                matrix,
+                true);
+
+        final long startTime = SystemClock.uptimeMillis();
+        final List<Classifier.Recognition> classresults =
+                classifier.recognizeImage(prepareImageForClassification(crop), 90);
+        lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+        System.out.print(classresults.toString());
+
+      }
+
       recognitions.add(
           new Recognition(
               "" + cnt++, //id
@@ -132,6 +194,7 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
 
   @Override
   public void setNumThreads(int numThreads) {
+    this.numThreads = numThreads;
     if (objectDetector != null) {
       optionsBuilder.setNumThreads(numThreads);
       recreateDetector();

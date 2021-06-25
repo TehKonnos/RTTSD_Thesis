@@ -71,7 +71,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // Minimum detection confidence to track a detection.
   private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
   private static final boolean MAINTAIN_ASPECT = false;
-  private static final Size DESIRED_PREVIEW_SIZE = new Size(100, 100);
+  private static final Size DESIRED_PREVIEW_SIZE = new Size(1280, 720);
   private static final boolean SAVE_PREVIEW_BITMAP = false;
   private static final float TEXT_SIZE_DIP = 10;
   OverlayView trackingOverlay;
@@ -99,7 +99,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private final String SIGN_LIST = "sign_list";
 
 
-  protected void onSaveInstanceState(@NonNull Bundle outState) {
+ /* protected void onSaveInstanceState(@NonNull Bundle outState) {
     super.onSaveInstanceState(outState);
     outState.putString(SIGN_LIST, new Gson().toJson(adapter.getSigns()));
   }
@@ -116,7 +116,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
     adapter.setSigns(items);
 
-  }
+  } */
 
   @Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {
@@ -214,7 +214,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           public void run() {
             LOGGER.i("Running detection on image " + currTimestamp);
             final long startTime = SystemClock.uptimeMillis();
-            final List<Detector.Recognition> results = detector.recognizeImage(croppedBitmap);
+            List<Detector.Recognition> results = null;
+            try {
+              results = detector.recognizeImage(croppedBitmap);
+            } catch (IOException e) {
+              e.printStackTrace();
+            }
             lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
             cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
@@ -244,7 +249,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 result.setLocation(location);
                 mappedRecognitions.add(result);
 
-                runOnUiThread(() -> updateSignList(result, croppedBitmap));
+                //runOnUiThread(() -> updateSignList(result, croppedBitmap));
               }
             }
 
@@ -266,7 +271,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         });
   }
 
-  private void updateSignList(TFLiteObjectDetectionAPIModel.Recognition result, Bitmap bitmap) {
+  /*private void updateSignList(TFLiteObjectDetectionAPIModel.Recognition result, Bitmap bitmap) {
 
     SignEntity sign = getSignImage(result, bitmap);
 
@@ -285,7 +290,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       addSignToAdapter(sign);
     }
 
-  }
+  }*/
 
   private void addSignToAdapter(SignEntity sign) {
     adapter.setSign(sign);
