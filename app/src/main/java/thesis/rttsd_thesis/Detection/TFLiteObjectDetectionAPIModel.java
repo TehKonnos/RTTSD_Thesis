@@ -18,10 +18,12 @@ package thesis.rttsd_thesis.Detection;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.os.Build;
 import android.os.SystemClock;
 import android.os.Trace;
 
 
+import androidx.annotation.RequiresApi;
 
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
@@ -36,9 +38,12 @@ import org.tensorflow.lite.task.vision.detector.Detection;
 import org.tensorflow.lite.task.vision.detector.ObjectDetector;
 
 import thesis.rttsd_thesis.Classifier;
+import thesis.rttsd_thesis.SpeedLimitClassifier;
 import thesis.rttsd_thesis.env.ImageUtils;
+import thesis.rttsd_thesis.model.entity.ClassificationEntity;
 
 import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
+import static thesis.rttsd_thesis.SpeedLimitClassifier.MODEL_FILENAME;
 
 /**
  * Wrapper for frozen detection models trained using the Tensorflow Object Detection API: -
@@ -111,6 +116,7 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
     objectDetector = ObjectDetector.createFromBufferAndOptions(modelBuffer, optionsBuilder.build());
   }
 
+  @RequiresApi(api = Build.VERSION_CODES.O)
   @Override
   public List<Recognition> recognizeImage(final Bitmap bitmap) throws IOException {
     // Log this method so that it can be analyzed with systrace.
@@ -159,10 +165,18 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
                 true);
 
         final long startTime = SystemClock.uptimeMillis();
-        final List<Classifier.Recognition> classresults =
-                classifier.recognizeImage(prepareImageForClassification(crop), 90);
+        //final List<Classifier.Recognition> classresults =
+         //       classifier.recognizeImage(prepareImageForClassification(crop), 90);
+        SpeedLimitClassifier speedLimitClassifier =null;
+        try {
+          speedLimitClassifier = SpeedLimitClassifier.classifier(getAssets(), MODEL_FILENAME);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+        List<ClassificationEntity> recognitions2 =
+                                     speedLimitClassifier.recognizeImage(prepareImageForClassification(crop));
         lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
-        System.out.print(classresults.toString());
+        System.out.print(recognitions2.toString());
 
       }
 
