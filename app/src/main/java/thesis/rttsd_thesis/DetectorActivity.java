@@ -27,6 +27,7 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.location.Location;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -36,6 +37,7 @@ import android.widget.Toast;
 
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -52,8 +54,12 @@ import thesis.rttsd_thesis.customview.OverlayView;
 import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
+import thesis.rttsd_thesis.model.entity.ClassificationEntity;
 import thesis.rttsd_thesis.model.entity.SignEntity;
 import thesis.rttsd_thesis.tracking.MultiBoxTracker;
+
+import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
+import static thesis.rttsd_thesis.SpeedLimitClassifier.MODEL_FILENAME;
 
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
@@ -65,8 +71,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // Configuration values for the prepackaged SSD model.
   private static final int TF_OD_API_INPUT_SIZE = 300;
   private static final boolean TF_OD_API_IS_QUANTIZED = true;
-  private static final String TF_OD_API_MODEL_FILE = "sign_recogn_2.tflite";
-  private static final String TF_OD_API_LABELS_FILE = "sign_recogn.txt";
+  private static final String TF_OD_API_MODEL_FILE = "detect.tflite";
+  private static final String TF_OD_API_LABELS_FILE = "labelmap.txt";
   private static final DetectorMode MODE = DetectorMode.TF_OD_API;
   // Minimum detection confidence to track a detection.
   private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
@@ -210,6 +216,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     runInBackground(
         new Runnable() {
+          @RequiresApi(api = Build.VERSION_CODES.O)
           @Override
           public void run() {
             LOGGER.i("Running detection on image " + currTimestamp);
@@ -239,9 +246,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             final List<Detector.Recognition> mappedRecognitions =
                 new ArrayList<Detector.Recognition>();
 
-            for (final Detector.Recognition result : results) {
-              final RectF location = result.getLocation();
+            for (Detector.Recognition result : results) {
+              RectF location = result.getLocation();
               if (location != null && result.getConfidence() >= minimumConfidence) {
+                //result = classify(result);
+                //location = result.getLocation();
+                //For testing:
+                Detector.Recognition result2 = classify(result);
                 canvas.drawRect(location, paint);
 
                 cropToFrameTransform.mapRect(location);
@@ -271,6 +282,46 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         });
   }
 
+//This method gets a recognised box of sign and returns the classified sign.
+  @RequiresApi(api = Build.VERSION_CODES.O)
+  private Detector.Recognition classify(Detector.Recognition result) {
+    Matrix matrix = new Matrix();
+    matrix.postRotate(90);
+
+    Bitmap crop =null;
+    try {
+      crop = Bitmap.createBitmap(rgbFrameBitmap,
+              (int) result.getLocation().left,
+              (int) result.getLocation().top,
+              (int) result.getLocation().width(),
+              (int) result.getLocation().height(),
+              matrix,
+              true);
+    }catch(Exception e) {
+      Log.e("Debugging", e.getMessage());
+    }
+    if(crop!=null) {
+      try {
+        SpeedLimitClassifier speedLimitClassifier = null;
+
+        speedLimitClassifier = SpeedLimitClassifier.classifier(
+                getAssets(), MODEL_FILENAME);
+
+        List<ClassificationEntity> recognitions2 =
+                speedLimitClassifier.recognizeImage(prepareImageForClassification(crop), getAssets());
+
+        Log.e("Classifier", recognitions2.toString());
+      }catch(Exception e){
+        Log.e("SpeedLimitClassifier", e.toString());
+      }
+    }
+
+
+
+
+
+    return null;
+  }
   /*private void updateSignList(TFLiteObjectDetectionAPIModel.Recognition result, Bitmap bitmap) {
 
     SignEntity sign = getSignImage(result, bitmap);

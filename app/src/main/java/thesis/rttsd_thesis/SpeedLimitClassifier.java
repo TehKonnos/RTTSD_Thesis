@@ -10,11 +10,16 @@ import androidx.annotation.RequiresApi;
 
 import org.tensorflow.lite.Interpreter;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -22,6 +27,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import thesis.rttsd_thesis.model.entity.ClassificationEntity;
 
@@ -31,8 +38,8 @@ public class SpeedLimitClassifier {
 
     public static String MODEL_FILENAME = "43signs.tflite";
 
-    public static final int INPUT_IMG_SIZE_WIDTH = 224;
-    public static final int INPUT_IMG_SIZE_HEIGHT = 224;
+    public static final int INPUT_IMG_SIZE_WIDTH = 32;
+    public static final int INPUT_IMG_SIZE_HEIGHT = 32;
     private static final int FLOAT_TYPE_SIZE = 4;
     private static final int PIXEL_SIZE = 3;
     private static final int MODEL_INPUT_SIZE = FLOAT_TYPE_SIZE * INPUT_IMG_SIZE_WIDTH * INPUT_IMG_SIZE_HEIGHT * PIXEL_SIZE;
@@ -79,8 +86,24 @@ public class SpeedLimitClassifier {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public List<ClassificationEntity> recognizeImage(Bitmap bitmap) throws IOException {
-        labels_arr = Files.readAllLines(Paths.get(OUTPUT_LABELS));
+    public List<ClassificationEntity> recognizeImage(Bitmap bitmap,AssetManager assetManager) throws IOException {
+        InputStream inputreader = assetManager.open(OUTPUT_LABELS);
+        BufferedReader buffreader = new BufferedReader(new InputStreamReader(inputreader));
+
+        List<String> labels_arr = new ArrayList<>();
+
+        while (buffreader.readLine() != null) {
+            labels_arr.add(buffreader.readLine());
+        }
+
+      /*  Scanner s = new Scanner(new File(String.valueOf(assetManager.openFd("43signs.txt"))));
+        ArrayList<String> labels_arr = new ArrayList<String>();
+        while (s.hasNext()){
+            labels_arr.add(s.next());
+        }
+        s.close();
+        */
+       // labels_arr = Files.readAllLines(Paths.get(OUTPUT_LABELS));
 
         ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
         float[][] result = new float[1][labels_arr.size()];

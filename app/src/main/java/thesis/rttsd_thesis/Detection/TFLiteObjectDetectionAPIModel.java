@@ -116,7 +116,6 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
     objectDetector = ObjectDetector.createFromBufferAndOptions(modelBuffer, optionsBuilder.build());
   }
 
-  @RequiresApi(api = Build.VERSION_CODES.O)
   @Override
   public List<Recognition> recognizeImage(final Bitmap bitmap) throws IOException {
     // Log this method so that it can be analyzed with systrace.
@@ -132,7 +131,7 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
     for (Detection detection : results) {
 
       if (detection != null) {
-        classifier = new Classifier(null, Classifier.Device.GPU, numThreads) {
+      /*  classifier = new Classifier(null, Classifier.Device.GPU, numThreads) {
           @Override
           protected String getModelPath() {
             return TFLITE;
@@ -152,8 +151,8 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
           protected TensorOperator getPostprocessNormalizeOp() {
             return null;
           }
-        };
-
+        }; */
+/*
         Matrix matrix = new Matrix();
         matrix.postRotate(90);
         Bitmap crop = Bitmap.createBitmap(rgbFrameBitmap,
@@ -169,7 +168,8 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
          //       classifier.recognizeImage(prepareImageForClassification(crop), 90);
         SpeedLimitClassifier speedLimitClassifier =null;
         try {
-          speedLimitClassifier = SpeedLimitClassifier.classifier(getAssets(), MODEL_FILENAME);
+          speedLimitClassifier = SpeedLimitClassifier.classifier(
+                  getAssets(), MODEL_FILENAME);
         } catch (IOException e) {
           e.printStackTrace();
         }
@@ -177,7 +177,7 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
                                      speedLimitClassifier.recognizeImage(prepareImageForClassification(crop));
         lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
         System.out.print(recognitions2.toString());
-
+*/
       }
 
       recognitions.add(
