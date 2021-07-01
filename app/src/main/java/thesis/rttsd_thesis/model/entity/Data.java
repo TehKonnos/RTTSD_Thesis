@@ -10,7 +10,7 @@ public class Data {
     private boolean isFirstTime;
 
     private double distanceM;
-    private double curSpeed;
+    private double currentSpeed;
     private double maxSpeed;
 
     private double sessionDistanceM;
@@ -43,7 +43,7 @@ public class Data {
     public Data() {
         isRunning = false;
         distanceM = 0;
-        curSpeed = 0;
+        currentSpeed = 0;
         maxSpeed = 0;
         timeStopped = 0;
     }
@@ -92,10 +92,10 @@ public class Data {
         return average;
     }
 
-    public void setCurSpeed(double curSpeed) {
-        this.curSpeed = curSpeed;
-        if (curSpeed > maxSpeed) {
-            maxSpeed = curSpeed;
+    public void setCurrentSpeed(double currentSpeed) {
+        this.currentSpeed = currentSpeed;
+        if (currentSpeed > maxSpeed) {
+            maxSpeed = currentSpeed;
         }
     }
 
@@ -119,8 +119,8 @@ public class Data {
         this.timeStopped += timeStopped;
     }
 
-    public double getCurSpeed() {
-        return curSpeed;
+    public double getCurrentSpeed() {
+        return currentSpeed;
     }
 
     public long getTime() {
