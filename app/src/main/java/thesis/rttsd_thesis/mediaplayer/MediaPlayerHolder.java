@@ -37,11 +37,11 @@ public class MediaPlayerHolder implements MediaPlayerAdapter {
     @Override
     public void loadMedia(@IdRes int resId) {
         initializeMediaPlayer();
-
+/*
         if (isPlaying() && resId != R.raw.exceeded_speed_limit){
             soundList.add(resId);
             return;
-        }
+        }8\*/
         Uri mediaPath = Uri.parse("android.resource://" + context.getPackageName() + "/" + resId);
 
         try {

@@ -375,6 +375,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   //speedLimitClassifier.recognizeImage(prepareImageForClassification(crop), getAssets());
 
           Log.e("Classifier", recognitions2.toString());
+          Toast.makeText(getApplicationContext(),recognitions2.toString(),Toast.LENGTH_LONG).show();
         } catch (Exception e) {
           Log.e("SpeedLimitClassifier", e.toString());
         }

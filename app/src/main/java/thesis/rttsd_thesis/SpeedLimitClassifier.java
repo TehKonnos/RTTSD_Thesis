@@ -46,6 +46,53 @@ public class SpeedLimitClassifier {
     private static final int IMAGE_MEAN = 0;
     private static final float IMAGE_STD = 255.0f;
 
+    public static final List<String> OUTPUT_LABELS = Collections.unmodifiableList(
+            Arrays.asList(
+                    "Speed limit (20km/h)",
+                    "Speed limit (30km/h)",
+                    "Speed limit (50km/h)",
+                    "Speed limit (60km/h)",
+                    "Speed limit (70km/h)",
+                    "Speed limit (80km/h)",
+                    "End of speed limit (80km/h)",
+                    "Speed limit (100km/h)",
+                    "Speed limit (120km/h)",
+                    "No passing",
+                    "No passing for vehicles over 3.5 metric tons",
+                    "Right-of-way at the next intersection",
+                    "Priority road",
+                    "Yield",
+                    "Stop",
+                    "No vehicles",
+                    "Vehicles over 3.5 metric tons prohibited",
+                    "No entry",
+                    "General caution",
+                    "Dangerous curve to the left",
+                    "Dangerous curve to the right",
+                    "Double curve",
+                    "Bumpy road",
+                    "Slippery road",
+                    "Road narrows on the right",
+                    "Road work",
+                    "Traffic signals",
+                    "Pedestrians",
+                    "Children crossing",
+                    "Bicycles crossing",
+                    "Beware of ice/snow",
+                    "Wild animals crossing",
+                    "End of all speed and passing limits",
+                    "Turn right ahead",
+                    "Turn left ahead",
+                    "Ahead only",
+                    "Go straight or right",
+                    "Go straight or left",
+                    "Keep right",
+                    "Keep left",
+                    "Roundabout mandatory",
+                    "End of no passing",
+                    "End of no passing by vehicles over 3.5 metric tons"
+            ));
+
     //This list can be taken from notebooks/output/labels_readable.txt
    /* public static final List<String> OUTPUT_LABELS = Collections.unmodifiableList(
             Arrays.asList(
@@ -59,7 +106,7 @@ public class SpeedLimitClassifier {
                     "speed limit 70",
                     "speed limit 80"
             ));*/
-    public static String OUTPUT_LABELS = "43signs.txt";
+    //public static String OUTPUT_LABELS = "43signs.txt";
 
     private static final int MAX_CLASSIFICATION_RESULTS = 3;
     private static final float CLASSIFICATION_THRESHOLD = 0.1f;
@@ -87,7 +134,7 @@ public class SpeedLimitClassifier {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public List<ClassificationEntity> recognizeImage(Bitmap bitmap,AssetManager assetManager) throws IOException {
-        InputStream inputreader = assetManager.open(OUTPUT_LABELS);
+        /*InputStream inputreader = assetManager.open(OUTPUT_LABELS);
         BufferedReader buffreader = new BufferedReader(new InputStreamReader(inputreader));
 
         List<String> labels_arr = new ArrayList<>();
@@ -106,7 +153,7 @@ public class SpeedLimitClassifier {
        // labels_arr = Files.readAllLines(Paths.get(OUTPUT_LABELS));
 
         ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
-        float[][] result = new float[1][labels_arr.size()];
+        float[][] result = new float[1][OUTPUT_LABELS.size()];
         interpreter.run(byteBuffer, result);
         return getSortedResult(result);
     }
@@ -134,11 +181,11 @@ public class SpeedLimitClassifier {
                 (lhs, rhs) -> Float.compare(rhs.getConfidence(), lhs.getConfidence())
         );
 
-        for (int i = 0; i < labels_arr.size(); ++i) {
+        for (int i = 0; i < OUTPUT_LABELS.size(); ++i) {
             float confidence = resultsArray[0][i];
             if (confidence > CLASSIFICATION_THRESHOLD) {
-                labels_arr.size();
-                sortedResults.add(new ClassificationEntity(labels_arr.get(i), confidence));
+                OUTPUT_LABELS.size();
+                sortedResults.add(new ClassificationEntity(OUTPUT_LABELS.get(i), confidence));
             }
         }
 
