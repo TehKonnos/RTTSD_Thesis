@@ -27,9 +27,6 @@
             android:layout_marginStart="16dp"
             android:textSize="24sp"
             tools:text="Current Speed: 80 km/h" />
-
-
     </LinearLayout>
-
 
 </LinearLayout>

@@ -65,6 +65,7 @@ import thesis.rttsd_thesis.model.entity.Data;
 import thesis.rttsd_thesis.model.entity.SignEntity;
 import thesis.rttsd_thesis.tracking.MultiBoxTracker;
 
+//import static thesis.rttsd_thesis.DetectorActivity.DetectorMode.TF_OD_API;
 import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
 import static thesis.rttsd_thesis.SpeedLimitClassifier.MODEL_FILENAME;
 
@@ -80,7 +81,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private static final boolean TF_OD_API_IS_QUANTIZED = true;
   private static final String TF_OD_API_MODEL_FILE = "detect.tflite";
   private static final String TF_OD_API_LABELS_FILE = "labelmap.txt";
-  //private static final DetectorMode MODE = DetectorMode.TF_OD_API;
+  private static final DetectorMode MODE = DetectorMode.TF_OD_API;
   // Minimum detection confidence to track a detection.
   private static float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
   private static final boolean MAINTAIN_ASPECT = false;
@@ -109,7 +110,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   private Data data;
   private TextView currentSpeed;
-  private SwitchCompat notification, classifier;
+  private SwitchCompat notification;
   private BorderedText borderedText;
   private MediaPlayerHolder mediaPlayerHolder;
   private SignAdapter adapter;
@@ -144,7 +145,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       double speed = data.getLocation().getSpeed() * 3.6;
       if (speed > 50 && notification.isChecked() && speedNotification) {
         speedNotification = false;
-        mediaPlayerHolder.loadMedia(R.raw.exceeded_speed_limit);
+        //mediaPlayerHolder.loadMedia(R.raw.exceeded_speed_limit);
       }
       currentSpeed.setText(String.format("%.0f", speed));
     }
@@ -160,7 +161,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       if (!isChecked)
         mediaPlayerHolder.reset();
     });
-    classifier = findViewById(R.id.classifier_switch);
 
     SeekBar confidenceSeekBar = findViewById(R.id.confidence_seek);
     confidenceSeekBar.setMax(100);
