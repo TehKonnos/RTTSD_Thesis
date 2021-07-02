@@ -181,6 +181,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       public void onStopTrackingTouch(SeekBar seekBar) {
       }
     });
+  }
 
     @Override
     public void onPreviewSizeChosen ( final Size size, final int rotation){
@@ -463,5 +464,4 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     protected void setNumThreads ( final int numThreads){
       runInBackground(() -> detector.setNumThreads(numThreads));
     }
-  }
 }
