@@ -96,8 +96,8 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
   private Runnable imageConverter;
   private int numThreads;
 
-  private static final String TFLITE = "43signs.tflite";
-  private static final String LABELS = "43signs.txt";
+  //private static final String TFLITE = "43signs.tflite";
+  //private static final String LABELS = "43signs.txt";
 
 
   public static Detector create(

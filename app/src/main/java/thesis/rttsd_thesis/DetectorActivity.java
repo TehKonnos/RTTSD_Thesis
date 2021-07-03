@@ -29,7 +29,6 @@ import android.graphics.Typeface;
 import android.location.Location;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
@@ -39,19 +38,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.SwitchCompat;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import org.tensorflow.lite.Interpreter;
+import org.tensorflow.lite.support.image.TensorImage;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import thesis.rttsd_thesis.R;
 import thesis.rttsd_thesis.Detection.Detector;
 import thesis.rttsd_thesis.Detection.TFLiteObjectDetectionAPIModel;
 import thesis.rttsd_thesis.adapter.SignAdapter;
@@ -60,6 +57,7 @@ import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
+import thesis.rttsd_thesis.ml.SignRecogn4;
 import thesis.rttsd_thesis.model.entity.ClassificationEntity;
 import thesis.rttsd_thesis.model.entity.Data;
 import thesis.rttsd_thesis.model.entity.SignEntity;
@@ -78,9 +76,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   // Configuration values for the prepackaged SSD model.
   private static final int TF_OD_API_INPUT_SIZE = 1024;
-  private static final boolean TF_OD_API_IS_QUANTIZED = true;
-  private static final String TF_OD_API_MODEL_FILE = "detect.tflite";
-  private static final String TF_OD_API_LABELS_FILE = "labelmap.txt";
+  private static final boolean TF_OD_API_IS_QUANTIZED = false;
+  private static final String TF_OD_API_MODEL_FILE = "sign_recogn.tflite";
+  private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/sign_recogn.txt";
   private static final DetectorMode MODE = DetectorMode.TF_OD_API;
   // Minimum detection confidence to track a detection.
   private static float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
@@ -194,7 +192,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       tracker = new MultiBoxTracker(this);
 
       int cropSize = TF_OD_API_INPUT_SIZE;
-
+/*
       try {
         detector =
                 TFLiteObjectDetectionAPIModel.create(
@@ -213,7 +211,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         toast.show();
         finish();
       }
-
+*/
       previewWidth = size.getWidth();
       previewHeight = size.getHeight();
 
@@ -281,13 +279,38 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   LOGGER.i("Running detection on image " + currTimestamp);
                   final long startTime = SystemClock.uptimeMillis();
                   List<Detector.Recognition> results = null;
+ //Android studio given code
+                  try {
+                    Interpreter.Options option=null; //TODO Edw pairnei kapoia options kai mallon prepei na setaroume oti einai float point or not
+                    SignRecogn4 model = SignRecogn4.newInstance(getBaseContext());
+
+                    // Creates inputs for reference.
+                    TensorImage image = TensorImage.fromBitmap(croppedBitmap);
+
+                    // Runs model inference and gets result.
+                    SignRecogn4.Outputs outputs = model.process(image);
+                    SignRecogn4.DetectionResult detectionResult = outputs.getDetectionResultList().get(0);
+
+                    // Gets result from DetectionResult.
+                    RectF location = detectionResult.getLocationAsRectF();
+                    String category = detectionResult.getCategoryAsString();
+                    float score = detectionResult.getScoreAsFloat();
+                    Log.e("ress",location.toString()+" "+category+" "+score);
+
+                    // Releases model resources if no longer used.
+                    model.close();
+                  } catch (IOException e) {
+                    // TODO Handle the exception
+                  }
+
+/*
                   try {
                     results = detector.recognizeImage(croppedBitmap);
                   } catch (IOException e) {
                     e.printStackTrace();
                   }
                   lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
-
+*/
                   cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
                   final Canvas canvas = new Canvas(cropCopyBitmap);
                   final Paint paint = new Paint();
