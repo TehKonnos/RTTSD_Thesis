@@ -37,14 +37,26 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.tensorflow.lite.DataType;
+import org.tensorflow.lite.Interpreter;
+import org.tensorflow.lite.support.common.FileUtil;
+import org.tensorflow.lite.support.image.ImageProcessor;
+import org.tensorflow.lite.support.image.TensorImage;
+import org.tensorflow.lite.support.image.ops.ResizeOp;
+
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.SwitchCompat;
 
-import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.image.TensorImage;
+import org.tensorflow.lite.support.model.Model;
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -58,6 +70,7 @@ import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
 import thesis.rttsd_thesis.ml.SignRecogn4;
+import thesis.rttsd_thesis.ml.Xronis;
 import thesis.rttsd_thesis.model.entity.ClassificationEntity;
 import thesis.rttsd_thesis.model.entity.Data;
 import thesis.rttsd_thesis.model.entity.SignEntity;
@@ -66,6 +79,7 @@ import thesis.rttsd_thesis.tracking.MultiBoxTracker;
 //import static thesis.rttsd_thesis.DetectorActivity.DetectorMode.TF_OD_API;
 import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
 import static thesis.rttsd_thesis.SpeedLimitClassifier.MODEL_FILENAME;
+import static thesis.rttsd_thesis.SpeedLimitClassifier.loadModelFile;
 
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
@@ -77,12 +91,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // Configuration values for the prepackaged SSD model.
   private static final int TF_OD_API_INPUT_SIZE = 1024;
   private static final boolean TF_OD_API_IS_QUANTIZED = false;
-  private static final String TF_OD_API_MODEL_FILE = "sign_recogn.tflite";
+  private static final String TF_OD_API_MODEL_FILE = "sign_recogn_5.tflite";
   private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/sign_recogn.txt";
   private static final DetectorMode MODE = DetectorMode.TF_OD_API;
   // Minimum detection confidence to track a detection.
   private static float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
-  private static final boolean MAINTAIN_ASPECT = false;
+  private static final boolean MAINTAIN_ASPECT = true;
   private static final Size DESIRED_PREVIEW_SIZE = new Size(1024, 1024);
   private static final boolean SAVE_PREVIEW_BITMAP = false;
   private static final float TEXT_SIZE_DIP = 10;
@@ -192,7 +206,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       tracker = new MultiBoxTracker(this);
 
       int cropSize = TF_OD_API_INPUT_SIZE;
-/*
+
       try {
         detector =
                 TFLiteObjectDetectionAPIModel.create(
@@ -211,7 +225,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         toast.show();
         finish();
       }
-*/
+
       previewWidth = size.getWidth();
       previewHeight = size.getHeight();
 
@@ -280,9 +294,32 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   final long startTime = SystemClock.uptimeMillis();
                   List<Detector.Recognition> results = null;
  //Android studio given code
+
+  /*                try {
+                    Xronis model = Xronis.newInstance(getApplicationContext());
+
+                    // Creates inputs for reference.
+                    TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1,3,1024, 1024}, DataType.FLOAT32);
+                    ByteBuffer byteBuffer=  convertBitmapToByteBuffer(croppedBitmap);
+                    Log.e("Gamieste",byteBuffer+"");
+                    inputFeature0.loadBuffer(byteBuffer);
+
+                    // Runs model inference and gets result.
+                    Xronis.Outputs outputs = model.process(inputFeature0);
+                    TensorBuffer outputFeature0 = outputs.getOutputFeature0AsTensorBuffer();
+                    TensorBuffer outputFeature1 = outputs.getOutputFeature1AsTensorBuffer();
+                    TensorBuffer outputFeature2 = outputs.getOutputFeature2AsTensorBuffer();
+                    TensorBuffer outputFeature3 = outputs.getOutputFeature3AsTensorBuffer();
+                    Log.e("Gamieste",outputFeature0.toString());
+                    // Releases model resources if no longer used.
+                    model.close();
+                  } catch (IOException e) {
+                    // TODO Handle the exception
+                  } */
+/*
                   try {
-                    Interpreter.Options option=null; //TODO Edw pairnei kapoia options kai mallon prepei na setaroume oti einai float point or not
-                    SignRecogn4 model = SignRecogn4.newInstance(getBaseContext());
+                    Model.Options option=null; //TODO Edw pairnei kapoia options kai mallon prepei na setaroume oti einai float point or not
+                    SignRecogn4 model = SignRecogn4.newInstance(getApplicationContext());
 
                     // Creates inputs for reference.
                     TensorImage image = TensorImage.fromBitmap(croppedBitmap);
@@ -302,15 +339,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   } catch (IOException e) {
                     // TODO Handle the exception
                   }
+*/
 
-/*
                   try {
                     results = detector.recognizeImage(croppedBitmap);
                   } catch (IOException e) {
                     e.printStackTrace();
                   }
                   lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
-*/
+
                   cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
                   final Canvas canvas = new Canvas(cropCopyBitmap);
                   final Paint paint = new Paint();
@@ -363,6 +400,24 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 }
               });
     }
+  private static final int IMAGE_MEAN = 0;
+  private static final float IMAGE_STD = 255.0f;
+
+  static ByteBuffer convertBitmapToByteBuffer(Bitmap bitmap) {
+    ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4*1024*1024*3);
+    byteBuffer.order(ByteOrder.nativeOrder());
+    int[] intValues = new int[1024 * 1024];
+    bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+    int pixel = 0;
+    for (int i = 0; i < 1024; ++i) {
+      for (int j = 0; j < 1024; ++j) {
+        final int val = intValues[pixel++];
+        byteBuffer.putFloat((((val >> 16) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
+        byteBuffer.putFloat((((val >> 8) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
+        byteBuffer.putFloat((((val) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
+      }
+    }
+    return byteBuffer;}
 
 //This method gets a recognised box of sign and returns the classified sign.
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -407,33 +462,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
       return null;
     }
-  /*private void updateSignList(TFLiteObjectDetectionAPIModel.Recognition result, Bitmap bitmap) {
 
-    SignEntity sign = getSignImage(result, bitmap);
-
-    ArrayList<SignEntity> list = new ArrayList<>(adapter.getSigns());
-
-    if (list.isEmpty()) {
-      addSignToAdapter(sign);
-      return;
-    }
-    if (list.contains(sign)) {
-      if (isRemoveValid(sign, list.get(list.indexOf(sign)))) {
-        adapter.getSigns().remove(sign);
-        addSignToAdapter(sign);
-      }
-    } else {
-      addSignToAdapter(sign);
-    }
-
-  }*/
-
-    private void addSignToAdapter (SignEntity sign){
-      adapter.setSign(sign);
-    /* if (notification.isChecked()) {
-      mediaPlayerHolder.loadMedia(sign.getSoundNotification());
-    } */
-    }
 
     private boolean isRemoveValid (SignEntity sign1, SignEntity sign2){
       return isTimeDifferenceValid(sign1.getDate(), sign2.getDate())

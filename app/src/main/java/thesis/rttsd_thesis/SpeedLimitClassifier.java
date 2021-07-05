@@ -123,7 +123,7 @@ public class SpeedLimitClassifier {
         return new SpeedLimitClassifier(interpreter);
     }
 
-    private static ByteBuffer loadModelFile(AssetManager assetManager, String modelPath) throws IOException {
+    static ByteBuffer loadModelFile(AssetManager assetManager, String modelPath) throws IOException {
         AssetFileDescriptor fileDescriptor = assetManager.openFd(modelPath);
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = inputStream.getChannel();
@@ -158,7 +158,7 @@ public class SpeedLimitClassifier {
         return getSortedResult(result);
     }
 
-    private ByteBuffer convertBitmapToByteBuffer(Bitmap bitmap) {
+    static ByteBuffer convertBitmapToByteBuffer(Bitmap bitmap) {
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(MODEL_INPUT_SIZE);
         byteBuffer.order(ByteOrder.nativeOrder());
         int[] intValues = new int[INPUT_IMG_SIZE_WIDTH * INPUT_IMG_SIZE_HEIGHT];
