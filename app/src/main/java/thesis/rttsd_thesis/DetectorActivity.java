@@ -91,7 +91,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // Configuration values for the prepackaged SSD model.
   private static final int TF_OD_API_INPUT_SIZE = 1024;
   private static final boolean TF_OD_API_IS_QUANTIZED = false;
-  private static final String TF_OD_API_MODEL_FILE = "sign_recogn_5.tflite";
+  private static final String TF_OD_API_MODEL_FILE = "sign_recogn_6.tflite";
   private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/sign_recogn.txt";
   private static final DetectorMode MODE = DetectorMode.TF_OD_API;
   // Minimum detection confidence to track a detection.
@@ -294,8 +294,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   final long startTime = SystemClock.uptimeMillis();
                   List<Detector.Recognition> results = null;
  //Android studio given code
-
-  /*                try {
+/*
+                try {
                     Xronis model = Xronis.newInstance(getApplicationContext());
 
                     // Creates inputs for reference.
@@ -306,17 +306,18 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                     // Runs model inference and gets result.
                     Xronis.Outputs outputs = model.process(inputFeature0);
+
                     TensorBuffer outputFeature0 = outputs.getOutputFeature0AsTensorBuffer();
                     TensorBuffer outputFeature1 = outputs.getOutputFeature1AsTensorBuffer();
                     TensorBuffer outputFeature2 = outputs.getOutputFeature2AsTensorBuffer();
                     TensorBuffer outputFeature3 = outputs.getOutputFeature3AsTensorBuffer();
-                    Log.e("Gamieste",outputFeature0.toString());
                     // Releases model resources if no longer used.
                     model.close();
                   } catch (IOException e) {
                     // TODO Handle the exception
-                  } */
-/*
+                  }
+                */
+
                   try {
                     Model.Options option=null; //TODO Edw pairnei kapoia options kai mallon prepei na setaroume oti einai float point or not
                     SignRecogn4 model = SignRecogn4.newInstance(getApplicationContext());
@@ -339,7 +340,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   } catch (IOException e) {
                     // TODO Handle the exception
                   }
-*/
+
 
                   try {
                     results = detector.recognizeImage(croppedBitmap);
@@ -347,6 +348,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                     e.printStackTrace();
                   }
                   lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+
 
                   cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
                   final Canvas canvas = new Canvas(cropCopyBitmap);
@@ -400,6 +402,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 }
               });
     }
+
+
   private static final int IMAGE_MEAN = 0;
   private static final float IMAGE_STD = 255.0f;
 
