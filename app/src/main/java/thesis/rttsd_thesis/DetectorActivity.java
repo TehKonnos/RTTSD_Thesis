@@ -50,6 +50,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.SwitchCompat;
 
 import org.tensorflow.lite.support.image.TensorImage;
+import org.tensorflow.lite.support.label.Category;
 import org.tensorflow.lite.support.model.Model;
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
@@ -69,6 +70,7 @@ import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
+import thesis.rttsd_thesis.ml.Model10;
 import thesis.rttsd_thesis.ml.SignRecogn4;
 import thesis.rttsd_thesis.ml.Xronis;
 import thesis.rttsd_thesis.model.entity.ClassificationEntity;
@@ -206,7 +208,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       tracker = new MultiBoxTracker(this);
 
       int cropSize = TF_OD_API_INPUT_SIZE;
-
+/*
       try {
         detector =
                 TFLiteObjectDetectionAPIModel.create(
@@ -225,7 +227,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         toast.show();
         finish();
       }
-
+*/
       previewWidth = size.getWidth();
       previewHeight = size.getHeight();
 
@@ -294,59 +296,29 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   final long startTime = SystemClock.uptimeMillis();
                   List<Detector.Recognition> results = null;
  //Android studio given code
-/*
-                try {
-                    Xronis model = Xronis.newInstance(getApplicationContext());
-
-                    // Creates inputs for reference.
-                    TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1,3,1024, 1024}, DataType.FLOAT32);
-                    ByteBuffer byteBuffer=  convertBitmapToByteBuffer(croppedBitmap);
-                    Log.e("Gamieste",byteBuffer+"");
-                    inputFeature0.loadBuffer(byteBuffer);
-
-                    // Runs model inference and gets result.
-                    Xronis.Outputs outputs = model.process(inputFeature0);
-
-                    TensorBuffer outputFeature0 = outputs.getOutputFeature0AsTensorBuffer();
-                    TensorBuffer outputFeature1 = outputs.getOutputFeature1AsTensorBuffer();
-                    TensorBuffer outputFeature2 = outputs.getOutputFeature2AsTensorBuffer();
-                    TensorBuffer outputFeature3 = outputs.getOutputFeature3AsTensorBuffer();
-                    // Releases model resources if no longer used.
-                    model.close();
-                  } catch (IOException e) {
-                    // TODO Handle the exception
-                  }
-                */
 
                   try {
-                    Model.Options option=null; //TODO Edw pairnei kapoia options kai mallon prepei na setaroume oti einai float point or not
-                    SignRecogn4 model = SignRecogn4.newInstance(getApplicationContext());
+                    Model10 model = Model10.newInstance(getApplicationContext());
 
                     // Creates inputs for reference.
                     TensorImage image = TensorImage.fromBitmap(croppedBitmap);
 
                     // Runs model inference and gets result.
-                    SignRecogn4.Outputs outputs = model.process(image);
-                    SignRecogn4.DetectionResult detectionResult = outputs.getDetectionResultList().get(0);
-
-                    // Gets result from DetectionResult.
-                    RectF location = detectionResult.getLocationAsRectF();
-                    String category = detectionResult.getCategoryAsString();
-                    float score = detectionResult.getScoreAsFloat();
-                    Log.e("ress",location.toString()+" "+category+" "+score);
-
+                    Model10.Outputs outputs = model.process(image);
+                    List<Category> probability = outputs.getProbabilityAsCategoryList();
+                    Log.e("Found:",probability.toString());
                     // Releases model resources if no longer used.
                     model.close();
                   } catch (IOException e) {
                     // TODO Handle the exception
                   }
 
-
+/*
                   try {
                     results = detector.recognizeImage(croppedBitmap);
                   } catch (IOException e) {
                     e.printStackTrace();
-                  }
+                  }*/
                   lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
 
