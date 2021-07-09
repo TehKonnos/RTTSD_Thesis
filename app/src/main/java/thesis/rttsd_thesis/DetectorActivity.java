@@ -71,6 +71,9 @@ import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
 import thesis.rttsd_thesis.ml.Model10;
+import thesis.rttsd_thesis.ml.Model11;
+import thesis.rttsd_thesis.ml.Model12;
+import thesis.rttsd_thesis.ml.Model13;
 import thesis.rttsd_thesis.ml.SignRecogn4;
 import thesis.rttsd_thesis.ml.Xronis;
 import thesis.rttsd_thesis.model.entity.ClassificationEntity;
@@ -296,22 +299,22 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   final long startTime = SystemClock.uptimeMillis();
                   List<Detector.Recognition> results = null;
  //Android studio given code
-
                   try {
-                    Model10 model = Model10.newInstance(getApplicationContext());
+                    Model13 model = Model13.newInstance(getApplicationContext());
 
                     // Creates inputs for reference.
                     TensorImage image = TensorImage.fromBitmap(croppedBitmap);
 
                     // Runs model inference and gets result.
-                    Model10.Outputs outputs = model.process(image);
+                    Model13.Outputs outputs = model.process(image);
                     List<Category> probability = outputs.getProbabilityAsCategoryList();
-                    Log.e("Found:",probability.toString());
+                    Log.e("Gamwtapanta",probability.toString());
                     // Releases model resources if no longer used.
                     model.close();
                   } catch (IOException e) {
                     // TODO Handle the exception
                   }
+
 
 /*
                   try {
