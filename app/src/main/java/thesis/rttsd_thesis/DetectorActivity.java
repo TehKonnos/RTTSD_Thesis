@@ -62,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import thesis.rttsd_thesis.Detection.Classifier;
 import thesis.rttsd_thesis.Detection.Detector;
 import thesis.rttsd_thesis.Detection.DetectorFactory;
 import thesis.rttsd_thesis.Detection.TFLiteObjectDetectionAPIModel;
@@ -96,7 +97,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // Configuration values for the prepackaged SSD model.
   private static final int TF_OD_API_INPUT_SIZE = 1024;
   private static final boolean TF_OD_API_IS_QUANTIZED = false;
-  private static final String TF_OD_API_MODEL_FILE = "model_14.tflite";
+  private static final String TF_OD_API_MODEL_FILE = "model_13.tflite";
   public static final String TF_OD_API_LABELS_FILE = "sign_recogn.txt";
   private static final DetectorMode MODE = DetectorMode.TF_OD_API;
   // Minimum detection confidence to track a detection.
@@ -110,7 +111,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private Integer sensorOrientation;
 
   //private Detector detector;
-  private YoloV5ClassifierDetect detector;
+  private Classifier detector;
 
   private long lastProcessingTimeMs;
   private Bitmap rgbFrameBitmap = null;
@@ -212,13 +213,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       tracker = new MultiBoxTracker(this);
 
       int cropSize = TF_OD_API_INPUT_SIZE;
-      int[] output_width = new int[]{40, 20, 10};
+      //TODO These must change to fit our dataset ~Kostas
+      int[] output_width = new int[]{1,64512, 6};
       int[][] masks = new int[][]{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}};
       int[] anchors = new int[]{
               10,13, 16,30, 33,23, 30,61, 62,45, 59,119, 116,90, 156,198, 373,326
       };
         try {
-          Log.e("Ti dinw",TF_OD_API_LABELS_FILE +" "+ TF_OD_API_MODEL_FILE +" "+TF_OD_API_INPUT_SIZE +" "+TF_OD_API_IS_QUANTIZED);
             detector =
                     YoloV5ClassifierDetect.create(
                             getAssets(),

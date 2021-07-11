@@ -71,7 +71,6 @@ public class YoloV5Classifier implements Classifier {
             final int[] anchors*/)
             throws IOException {
         final YoloV5Classifier d = new YoloV5Classifier();
-        Log.e("ti pira",inputSize+""+labelFilename);
         InputStream labelsInput = assetManager.open(labelFilename);
         BufferedReader br = new BufferedReader(new InputStreamReader(labelsInput));
         String line;
