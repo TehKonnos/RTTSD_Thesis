@@ -62,8 +62,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import thesis.rttsd_thesis.Detection.Classifier;
 import thesis.rttsd_thesis.Detection.Detector;
+import thesis.rttsd_thesis.Detection.DetectorFactory;
 import thesis.rttsd_thesis.Detection.TFLiteObjectDetectionAPIModel;
+import thesis.rttsd_thesis.Detection.YoloV5Classifier;
+import thesis.rttsd_thesis.Detection.YoloV5ClassifierDetect;
 import thesis.rttsd_thesis.adapter.SignAdapter;
 import thesis.rttsd_thesis.customview.OverlayView;
 import thesis.rttsd_thesis.env.BorderedText;
@@ -71,10 +75,12 @@ import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
 import thesis.rttsd_thesis.ml.Model13;
+import thesis.rttsd_thesis.ml.Model14;
 import thesis.rttsd_thesis.model.entity.ClassificationEntity;
 import thesis.rttsd_thesis.model.entity.Data;
 import thesis.rttsd_thesis.model.entity.SignEntity;
 import thesis.rttsd_thesis.tracking.MultiBoxTracker;
+import thesis.rttsd_thesis.Detection.Classifier.Recognition;
 
 //import static thesis.rttsd_thesis.DetectorActivity.DetectorMode.TF_OD_API;
 import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
@@ -91,11 +97,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // Configuration values for the prepackaged SSD model.
   private static final int TF_OD_API_INPUT_SIZE = 1024;
   private static final boolean TF_OD_API_IS_QUANTIZED = false;
-  private static final String TF_OD_API_MODEL_FILE = "sign_recogn_6.tflite";
-  private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/sign_recogn.txt";
+  private static final String TF_OD_API_MODEL_FILE = "model_13.tflite";
+  public static final String TF_OD_API_LABELS_FILE = "sign_recogn.txt";
   private static final DetectorMode MODE = DetectorMode.TF_OD_API;
   // Minimum detection confidence to track a detection.
-  private static float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
+  public static float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
   private static final boolean MAINTAIN_ASPECT = true;
   private static final Size DESIRED_PREVIEW_SIZE = new Size(1024, 1024);
   private static final boolean SAVE_PREVIEW_BITMAP = false;
@@ -104,7 +110,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   private Integer sensorOrientation;
 
-  private Detector detector;
+  //private Detector detector;
+  private Classifier detector;
 
   private long lastProcessingTimeMs;
   private Bitmap rgbFrameBitmap = null;
@@ -206,26 +213,33 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       tracker = new MultiBoxTracker(this);
 
       int cropSize = TF_OD_API_INPUT_SIZE;
-/*
-      try {
-        detector =
-                TFLiteObjectDetectionAPIModel.create(
-                        this,
-                        TF_OD_API_MODEL_FILE,
-                        TF_OD_API_LABELS_FILE,
-                        TF_OD_API_INPUT_SIZE,
-                        TF_OD_API_IS_QUANTIZED);
-        cropSize = TF_OD_API_INPUT_SIZE;
-      } catch (final IOException e) {
-        e.printStackTrace();
-        LOGGER.e(e, "Exception initializing Detector!");
-        Toast toast =
-                Toast.makeText(
-                        getApplicationContext(), "Detector could not be initialized", Toast.LENGTH_SHORT);
-        toast.show();
-        finish();
-      }
-*/
+      //TODO These must change to fit our dataset ~Kostas
+      int[] output_width = new int[]{1,64512, 6};
+      int[][] masks = new int[][]{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}};
+      int[] anchors = new int[]{
+              10,13, 16,30, 33,23, 30,61, 62,45, 59,119, 116,90, 156,198, 373,326
+      };
+        try {
+            detector =
+                    YoloV5ClassifierDetect.create(
+                            getAssets(),
+                            TF_OD_API_MODEL_FILE,
+                            TF_OD_API_LABELS_FILE,
+                            TF_OD_API_IS_QUANTIZED,
+                            TF_OD_API_INPUT_SIZE,
+                            output_width,
+                            masks,
+                            anchors);
+        } catch (final IOException e) {
+            e.printStackTrace();
+            LOGGER.e(e, "Exception initializing classifier!");
+            Toast toast =
+                    Toast.makeText(
+                            getApplicationContext(), "Classifier could not be initialized", Toast.LENGTH_SHORT);
+            toast.show();
+            finish();
+        }
+
       previewWidth = size.getWidth();
       previewHeight = size.getHeight();
 
@@ -290,33 +304,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 @RequiresApi(api = Build.VERSION_CODES.O)
                 @Override
                 public void run() {
+
+
                   LOGGER.i("Running detection on image " + currTimestamp);
                   final long startTime = SystemClock.uptimeMillis();
-                  List<Detector.Recognition> results = null;
- //Android studio given code
-                  try {
-                    Model13 model = Model13.newInstance(getApplicationContext());
-
-                    // Creates inputs for reference.
-                    TensorImage image = TensorImage.fromBitmap(croppedBitmap);
-
-                    // Runs model inference and gets result.
-                    Model13.Outputs outputs = model.process(image);
-                    List<Category> probability = outputs.getProbabilityAsCategoryList();
-                    Log.e("Gamwtapanta",probability.toString());
-                    // Releases model resources if no longer used.
-                    model.close();
-                  } catch (IOException e) {
-                    // TODO Handle the exception
-                  }
-
-
-/*
-                  try {
-                    results = detector.recognizeImage(croppedBitmap);
-                  } catch (IOException e) {
-                    e.printStackTrace();
-                  }*/
+                  //List<Detector.Recognition> results = null;
+                  List<Recognition> results = detector.recognizeImage(croppedBitmap);
                   lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
 
@@ -334,10 +327,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                       break;
                   }
 
-                  final List<Detector.Recognition> mappedRecognitions =
-                          new ArrayList<Detector.Recognition>();
+                  final List<Recognition> mappedRecognitions =
+                          new ArrayList<Recognition>();
 
-                  for (Detector.Recognition result : results) {
+                  for (Recognition result : results) {
                     RectF location = result.getLocation();
                     if (location != null && result.getConfidence() >= minimumConfidence) {
                       //result = classify(result);
@@ -377,25 +370,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private static final int IMAGE_MEAN = 0;
   private static final float IMAGE_STD = 255.0f;
 
-  static ByteBuffer convertBitmapToByteBuffer(Bitmap bitmap) {
-    ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4*1024*1024*3);
-    byteBuffer.order(ByteOrder.nativeOrder());
-    int[] intValues = new int[1024 * 1024];
-    bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-    int pixel = 0;
-    for (int i = 0; i < 1024; ++i) {
-      for (int j = 0; j < 1024; ++j) {
-        final int val = intValues[pixel++];
-        byteBuffer.putFloat((((val >> 16) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
-        byteBuffer.putFloat((((val >> 8) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
-        byteBuffer.putFloat((((val) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
-      }
-    }
-    return byteBuffer;}
-
 //This method gets a recognised box of sign and returns the classified sign.
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private Detector.Recognition classify (Detector.Recognition result){
+    private Detector.Recognition classify (Recognition result){
       Matrix matrix = new Matrix();
       matrix.postRotate(90);
 

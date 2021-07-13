@@ -17,33 +17,18 @@ package thesis.rttsd_thesis.Detection;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Matrix;
-import android.os.Build;
-import android.os.SystemClock;
 import android.os.Trace;
 
-
-import androidx.annotation.RequiresApi;
 
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.tensorflow.lite.*;
 import org.tensorflow.lite.support.common.FileUtil;
-import org.tensorflow.lite.support.common.TensorOperator;
 import org.tensorflow.lite.support.image.TensorImage;
 import org.tensorflow.lite.task.vision.detector.Detection;
 import org.tensorflow.lite.task.vision.detector.ObjectDetector;
-
-import thesis.rttsd_thesis.Classifier;
-import thesis.rttsd_thesis.SpeedLimitClassifier;
-import thesis.rttsd_thesis.env.ImageUtils;
-import thesis.rttsd_thesis.model.entity.ClassificationEntity;
-
-import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
-import static thesis.rttsd_thesis.SpeedLimitClassifier.MODEL_FILENAME;
 
 /**
  * Wrapper for frozen detection models trained using the Tensorflow Object Detection API: -
