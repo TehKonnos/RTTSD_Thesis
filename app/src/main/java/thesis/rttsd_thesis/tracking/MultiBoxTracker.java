@@ -35,7 +35,8 @@ import thesis.rttsd_thesis.Detection.Classifier;
 import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
-import thesis.rttsd_thesis.Detection.Classifier.Recognition;
+//import thesis.rttsd_thesis.Detection.Classifier.Recognition;
+import thesis.rttsd_thesis.Detection.Detector.Recognition;
 
 /** A tracker that handles non-max suppression and matches existing objects to new detections. */
 public class MultiBoxTracker {
@@ -113,7 +114,7 @@ public class MultiBoxTracker {
     }
   }
 
-  public synchronized void trackResults(final List<Classifier.Recognition> results, final long timestamp) {
+  public synchronized void trackResults(final List<Recognition> results, final long timestamp) {
     logger.i("Processing %d results from %d", results.size(), timestamp);
     processResults(results);
   }
@@ -156,7 +157,7 @@ public class MultiBoxTracker {
     }
   }
 
-  private void processResults(final List<Classifier.Recognition> results) {
+  private void processResults(final List<Recognition> results) {
     final List<Pair<Float, Recognition>> rectsToTrack = new LinkedList<Pair<Float, Recognition>>();
 
     screenRects.clear();
@@ -195,8 +196,8 @@ public class MultiBoxTracker {
       trackedRecognition.detectionConfidence = potential.first;
       trackedRecognition.location = new RectF(potential.second.getLocation());
       trackedRecognition.title = potential.second.getTitle();
-//      trackedRecognition.color = COLORS[trackedObjects.size() % COLORS.length];
-      trackedRecognition.color = COLORS[potential.second.getDetectedClass() % COLORS.length];
+      trackedRecognition.color = COLORS[trackedObjects.size() % COLORS.length];
+      //trackedRecognition.color = COLORS[potential.second.getDetectedClass() % COLORS.length];
       trackedObjects.add(trackedRecognition);
 
 //      if (trackedObjects.size() >= COLORS.length) {

@@ -86,15 +86,15 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
 
 
   public static Detector create(
-      final Context context,
-      final String modelFilename,
-      final String labelFilename,
-      final int inputSize,
-      final boolean isQuantized)
-      throws IOException {
+          final Context context,
+          final String modelFilename,
+          final String labelFilename,
+          final int inputSize,
+          final boolean isQuantized)
+          throws IOException {
     return new TFLiteObjectDetectionAPIModel(context, modelFilename);
   }
-
+  
   private TFLiteObjectDetectionAPIModel(Context context, String modelFilename) throws IOException {
     modelBuffer = FileUtil.loadMappedFile(context, modelFilename);
     optionsBuilder = ObjectDetector.ObjectDetectorOptions.builder().setMaxResults(NUM_DETECTIONS);

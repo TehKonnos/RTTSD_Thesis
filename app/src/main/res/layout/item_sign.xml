@@ -4,6 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center"
+    android:background="@color/cardview_light_background"
+    
     android:orientation="horizontal"
     android:paddingStart="32dp"
     android:paddingTop="4dp"
@@ -25,8 +27,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:textSize="24sp"
-            tools:text="Current Speed: 80 km/h" />
+            android:textSize="22sp"
+            android:textColor="@color/design_default_color_on_primary"
+            android:text="@string/currentSpeedTxt"/>
     </LinearLayout>
 
 </LinearLayout>

@@ -20,6 +20,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
@@ -50,31 +51,35 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
-import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
+import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
 import thesis.rttsd_thesis.model.bus.MessageEventBus;
 import thesis.rttsd_thesis.model.bus.model.EventGpsDisabled;
 import thesis.rttsd_thesis.model.bus.model.EventUpdateLocation;
-import thesis.rttsd_thesis.model.bus.model.EventUpdateStatus;
 import thesis.rttsd_thesis.model.entity.Data;
-import thesis.rttsd_thesis.model.entity.GpsStatusEntity;
 
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.location.GpsStatus.GPS_EVENT_SATELLITE_STATUS;
 
 public abstract class CameraActivity extends AppCompatActivity
-    implements OnImageAvailableListener,
+        implements OnImageAvailableListener,
         Camera.PreviewCallback,
         CompoundButton.OnCheckedChangeListener,
         View.OnClickListener {
@@ -106,9 +111,17 @@ public abstract class CameraActivity extends AppCompatActivity
   private SwitchCompat apiSwitchCompat;
   private TextView threadsTextView;
 
+  private Boolean notificationSpeed = true;
+  private TextView currentSpeed;
+  private SwitchCompat notification;
+  private MediaPlayerHolder mediaPlayerHolder;
+
   private LocationManager mLocationManager;
+
+  private CompositeDisposable compositeDisposable;
   Data data;
 
+  @SuppressLint("CheckResult")
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
     LOGGER.d("onCreate " + this);
@@ -116,11 +129,24 @@ public abstract class CameraActivity extends AppCompatActivity
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     setContentView(R.layout.tfe_od_activity_camera);
-    Toolbar toolbar = findViewById(R.id.toolbar);
-    setSupportActionBar(toolbar);
-    getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+    Observable.interval(30L, TimeUnit.SECONDS)
+            .timeInterval()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(v -> {
+              notificationSpeed = true;
+            });
+
+    notification = findViewById(R.id.notification_switch);
+    notification.setOnCheckedChangeListener((buttonView, isChecked) -> {
+      if (!isChecked)
+        mediaPlayerHolder.reset();
+    });
+
+    setCallBack();
 
     if (hasPermission()) {
+      setupLocation();
       setFragment();
     } else {
       requestPermission();
@@ -189,6 +215,59 @@ public abstract class CameraActivity extends AppCompatActivity
 
     plusImageView.setOnClickListener(this);
     minusImageView.setOnClickListener(this);
+  }
+
+  private void setCallBack() {
+    compositeDisposable = new CompositeDisposable();
+    compositeDisposable.add(MessageEventBus.INSTANCE
+            .toObservable()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(eventModel -> {
+
+              if (eventModel instanceof EventUpdateLocation) {
+                refresh(((EventUpdateLocation) eventModel).getData());
+              }
+              if (eventModel instanceof EventGpsDisabled) {
+                showGpsDisabledDialog();
+              }
+            }));
+  }
+
+  private void showGpsDisabledDialog() {
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setTitle(getString(R.string.gps_disabled))
+            .setMessage(getString(R.string.please_enable_gps))
+            .setNegativeButton(android.R.string.cancel, (dialog, id) -> {
+              dialog.cancel();
+            })
+            .setPositiveButton(android.R.string.ok, (dialog, id) -> {
+              startActivity(new Intent("android.settings.LOCATION_SOURCE_SETTINGS"));
+            });
+    AlertDialog dialog = builder.create();
+    dialog.setCancelable(true);
+    dialog.setOnShowListener(arg -> {
+              dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                      .setTextColor(ContextCompat.getColor(this, R.color.cod_gray));
+              dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                      .setTextColor(ContextCompat.getColor(this, R.color.cod_gray));
+            }
+    );
+    dialog.show();
+  }
+
+  @SuppressLint({"ResourceType", "DefaultLocale", "SetTextI18n"})
+  private void refresh(Data data) {
+    this.data = data;
+    currentSpeed = findViewById(R.id.currentSpeed);
+    if (data.getLocation().hasSpeed()) {
+      double speed = data.getLocation().getSpeed() * 3.6;
+      //TODO Get Current Speed Limit  and replace number <50>
+      if (speed > 50 && notification.isChecked() && getNotificationSpeed()) {
+        setNotificationSpeed(false);
+        //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded); //Play default
+      }
+      currentSpeed.setText("Current Speed: "+(int) speed+" km/h");
+    }
   }
 
   protected int[] getRgbBytes() {
@@ -359,6 +438,10 @@ public abstract class CameraActivity extends AppCompatActivity
   public synchronized void onDestroy() {
     LOGGER.d("onDestroy " + this);
     super.onDestroy();
+    if (compositeDisposable != null) {
+      compositeDisposable.dispose();
+      compositeDisposable = null;
+    }
   }
 
   protected synchronized void runInBackground(final Runnable r) {
@@ -391,22 +474,19 @@ public abstract class CameraActivity extends AppCompatActivity
 
   private boolean hasPermission() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      return checkSelfPermission(PERMISSION_CAMERA) == PackageManager.PERMISSION_GRANTED;
+      return checkSelfPermission(PERMISSION_CAMERA) == PackageManager.PERMISSION_GRANTED && checkSelfPermission(ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     } else {
       return true;
     }
   }
 
-  private void requestPermission() {
+
+  protected void requestPermission() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      if (shouldShowRequestPermissionRationale(PERMISSION_CAMERA)) {
-        Toast.makeText(
-                CameraActivity.this,
-                "Camera permission is required for this demo",
-                Toast.LENGTH_LONG)
-                .show();
+      if (shouldShowRequestPermissionRationale(PERMISSION_CAMERA) ||
+              shouldShowRequestPermissionRationale(ACCESS_FINE_LOCATION)) {
       }
-      requestPermissions(new String[]{PERMISSION_CAMERA}, PERMISSIONS_REQUEST);
+      requestPermissions(new String[]{PERMISSION_CAMERA, ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST);
     }
   }
 
@@ -574,6 +654,17 @@ public abstract class CameraActivity extends AppCompatActivity
 
   protected abstract void setUseNNAPI(boolean isChecked);
 
+  @SuppressLint("MissingPermission")
+  private void setupLocation() {
+    mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+
+    mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, locationListener);
+
+    if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+      MessageEventBus.INSTANCE.send(new EventGpsDisabled());
+    }
+  }
+
   private LocationListener locationListener = new LocationListener() {
 
     @Override
@@ -625,29 +716,6 @@ public abstract class CameraActivity extends AppCompatActivity
 
     private GpsStatus.Listener gpsStatus = event -> {
       switch (event) {
-        case GPS_EVENT_SATELLITE_STATUS:
-          @SuppressLint("MissingPermission") GpsStatus gpsStatus = mLocationManager.getGpsStatus(null);
-          int satsInView = 0;
-          int satsUsed = 0;
-          Iterable<GpsSatellite> sats = gpsStatus.getSatellites();
-          for (GpsSatellite sat : sats) {
-            satsInView++;
-            if (sat.usedInFix())
-              satsUsed++;
-          }
-
-          String satellite = satsUsed + "/" + satsInView;
-          String accuracy = null;
-          String status = null;
-          if (satsUsed == 0) {
-            accuracy = "";
-            status = getResources().getString(R.string.gps_fix);
-          }
-
-          MessageEventBus.INSTANCE.send(new EventUpdateStatus(new GpsStatusEntity(satellite, status, accuracy)));
-
-          break;
-
         case GpsStatus.GPS_EVENT_STOPPED:
           if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             MessageEventBus.INSTANCE.send(new EventGpsDisabled());
@@ -659,4 +727,23 @@ public abstract class CameraActivity extends AppCompatActivity
     };
   }
 
+  public Boolean getNotificationSpeed() {
+    return notificationSpeed;
+  }
+
+  public void setNotificationSpeed(Boolean notificationSpeed) {
+    this.notificationSpeed = notificationSpeed;
+  }
+
+  private GpsStatus.Listener gpsStatus = event -> {
+    switch (event) {
+      case GpsStatus.GPS_EVENT_STOPPED:
+        if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+          MessageEventBus.INSTANCE.send(new EventGpsDisabled());
+        }
+        break;
+      case GpsStatus.GPS_EVENT_FIRST_FIX:
+        break;
+    }
+  };
 }
