@@ -35,8 +35,8 @@ import thesis.rttsd_thesis.Detection.Classifier;
 import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
-//import thesis.rttsd_thesis.Detection.Classifier.Recognition;
-import thesis.rttsd_thesis.Detection.Detector.Recognition;
+import thesis.rttsd_thesis.Detection.Classifier.Recognition;
+//import thesis.rttsd_thesis.Detection.Detector.Recognition;
 
 /** A tracker that handles non-max suppression and matches existing objects to new detections. */
 public class MultiBoxTracker {

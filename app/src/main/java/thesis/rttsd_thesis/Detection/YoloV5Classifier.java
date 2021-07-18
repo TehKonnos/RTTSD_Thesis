@@ -373,16 +373,16 @@ public class YoloV5Classifier implements Classifier {
         return imgData;
     }
 
-    public List<Recognition> recognizeImage(Bitmap bitmap) {
-        //ByteBuffer byteBuffer_ = convertBitmapToByteBuffer(bitmap);
+    public ArrayList<Recognition> recognizeImage(Bitmap bitmap) {
+        ByteBuffer byteBuffer_ = convertBitmapToByteBuffer(bitmap);
 
         Map<Integer, Object> outputMap = new HashMap<>();
 
 //        float[][][] outbuf = new float[1][output_box][labels.size() + 5];
-        Log.e("1f",outData.toString());
         outData.rewind();
-        Log.e("2ff",outData.toString());
         outputMap.put(0, outData);
+        Log.d("YoloV5Classifier", "mObjThresh: " + getObjThresh());
+
         Object[] inputArray = {imgData};
         tfLite.runForMultipleInputsOutputs(inputArray, outputMap);
 

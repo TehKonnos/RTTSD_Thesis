@@ -51,9 +51,11 @@ import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
-//import thesis.rttsd_thesis.Detection.Classifier;
-import thesis.rttsd_thesis.Detection.Detector;
+import thesis.rttsd_thesis.Detection.Classifier;
+import thesis.rttsd_thesis.Detection.Classifier.*;
+//import thesis.rttsd_thesis.Detection.Detector;
 import thesis.rttsd_thesis.Detection.TFLiteObjectDetectionAPIModel;
+import thesis.rttsd_thesis.Detection.YoloV5Classifier;
 import thesis.rttsd_thesis.adapter.SignAdapter;
 import thesis.rttsd_thesis.customview.OverlayView;
 import thesis.rttsd_thesis.env.BorderedText;
@@ -80,10 +82,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private static final Logger LOGGER = new Logger();
 
   // Configuration values for the prepackaged SSD model.
-  private static final int TF_OD_API_INPUT_SIZE = 1024;
+  private static final int TF_OD_API_INPUT_SIZE = 640;
   private static final boolean TF_OD_API_IS_QUANTIZED = false;
-  private static final String TF_OD_API_MODEL_FILE = "detect.tflite";
-  public static final String TF_OD_API_LABELS_FILE = "labelmap.txt";
+  private static final String TF_OD_API_MODEL_FILE = "sign_recogn.tflite";
+  public static final String TF_OD_API_LABELS_FILE = "sign_recogn.txt";
   private static final DetectorMode MODE = DetectorMode.TF_OD_API;
   // Minimum detection confidence to track a detection.
   public static float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
@@ -95,8 +97,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   private Integer sensorOrientation;
 
-  private Detector detector;
-  //private Classifier detector;
+  //private Detector detector;
+  private YoloV5Classifier detector;
 
   private long lastProcessingTimeMs;
   private Bitmap rgbFrameBitmap = null;
@@ -183,18 +185,19 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       //TODO These must change to fit our dataset ~Kostas
       int[] output_width = new int[]{1,64512, 6};
       int[][] masks = new int[][]{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}};
-      int[] anchors = new int[]{10,13, 16,30, 33,23, 30,61, 62,45, 59,119, 116,90, 156,198, 373,326};
+      int[] anchors = new int[]{2,3, 5,5, 7,8, 17,6,12,12, 20,20, 36,17, 41,40, 98,88};
         try {
             detector =
-                    TFLiteObjectDetectionAPIModel.create(
-                            this,
+                    YoloV5Classifier.create(
+                            getAssets(),
                             TF_OD_API_MODEL_FILE,
                             TF_OD_API_LABELS_FILE,
-                            TF_OD_API_INPUT_SIZE,
-                            TF_OD_API_IS_QUANTIZED
+                            TF_OD_API_IS_QUANTIZED,
+                            TF_OD_API_INPUT_SIZE
                             /*output_width,
                             masks,
                             anchors*/);
+            //detector.useGpu();
         } catch (final IOException e) {
             e.printStackTrace();
             LOGGER.e(e, "Exception initializing classifier!");
@@ -273,14 +276,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                   LOGGER.i("Running detection on image " + currTimestamp);
                   final long startTime = SystemClock.uptimeMillis();
-                  //List<Detector.Recognition> results = null;
-                    List<Detector.Recognition> results = null;
-                    try {
-                        results = detector.recognizeImage(croppedBitmap);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    //List<Recognition> results = detector.recognizeImage(croppedBitmap);
+                  List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
+                  Log.e("returned results:",results.toString());
                   lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
 
@@ -298,16 +295,16 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                       break;
                   }
 
-                  final List<Detector.Recognition> mappedRecognitions =
-                          new ArrayList<Detector.Recognition>();
+                  final List<Recognition> mappedRecognitions =
+                          new ArrayList<Recognition>();
 
-                  for (Detector.Recognition result : results) {
+                  for (Recognition result : results) {
                     RectF location = result.getLocation();
                     if (location != null && result.getConfidence() >= minimumConfidence) {
                       //result = classify(result);
                       //location = result.getLocation();
                       //For testing:
-                      Detector.Recognition result2 = classify(result);
+                      Recognition result2 = classify(result);
                       canvas.drawRect(location, paint);
 
                       cropToFrameTransform.mapRect(location);
@@ -342,7 +339,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private static final float IMAGE_STD = 255.0f;
 
 //This method gets a recognised box of sign and returns the classified sign.
-    private Detector.Recognition classify (Detector.Recognition result){
+    private Recognition classify (Recognition result){
       Matrix matrix = new Matrix();
       matrix.postRotate(90);
 
