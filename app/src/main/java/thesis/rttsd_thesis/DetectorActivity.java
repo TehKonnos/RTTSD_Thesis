@@ -17,7 +17,6 @@
 package thesis.rttsd_thesis;
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -30,6 +29,7 @@ import android.graphics.Typeface;
 import android.location.Location;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
@@ -38,23 +38,31 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
-import androidx.core.content.ContextCompat;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import org.tensorflow.lite.DataType;
+import org.tensorflow.lite.support.image.TensorImage;
+import org.tensorflow.lite.support.label.Category;
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
+import org.tensorflow.lite.task.vision.classifier.Classifications;
+import org.tensorflow.lite.task.vision.classifier.ImageClassifier;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
 import thesis.rttsd_thesis.Detection.Classifier;
-import thesis.rttsd_thesis.Detection.Classifier.*;
-//import thesis.rttsd_thesis.Detection.Detector;
-import thesis.rttsd_thesis.Detection.TFLiteObjectDetectionAPIModel;
+import thesis.rttsd_thesis.Detection.Classifier.Recognition;
 import thesis.rttsd_thesis.Detection.YoloV5Classifier;
 import thesis.rttsd_thesis.adapter.SignAdapter;
 import thesis.rttsd_thesis.customview.OverlayView;
@@ -62,17 +70,15 @@ import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
-import thesis.rttsd_thesis.model.bus.MessageEventBus;
-import thesis.rttsd_thesis.model.bus.model.EventGpsDisabled;
-import thesis.rttsd_thesis.model.bus.model.EventUpdateLocation;
+import thesis.rttsd_thesis.ml.AutoModel43signs;
 import thesis.rttsd_thesis.model.entity.ClassificationEntity;
 import thesis.rttsd_thesis.model.entity.Data;
 import thesis.rttsd_thesis.model.entity.SignEntity;
 import thesis.rttsd_thesis.tracking.MultiBoxTracker;
 
-//import static thesis.rttsd_thesis.DetectorActivity.DetectorMode.TF_OD_API;
 import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
 import static thesis.rttsd_thesis.SpeedLimitClassifier.MODEL_FILENAME;
+import static thesis.rttsd_thesis.SpeedLimitClassifier.convertBitmapToByteBuffer;
 
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
@@ -119,29 +125,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private SwitchCompat notification;
   private BorderedText borderedText;
   private MediaPlayerHolder mediaPlayerHolder;
-  private SignAdapter adapter;
-  private final String SIGN_LIST = "sign_list";
 
-  private CompositeDisposable compositeDisposable;
 
- /* protected void onSaveInstanceState(@NonNull Bundle outState) {
+  protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
-    outState.putString(SIGN_LIST, new Gson().toJson(adapter.getSigns()));
   }
 
   protected void onRestoreInstanceState(Bundle savedInstanceState) {
     super.onRestoreInstanceState(savedInstanceState);
-    String json = savedInstanceState.getString(SIGN_LIST);
-    ArrayList<SignEntity> items = null;
-    try {
-      items = (new Gson()).fromJson(json, new TypeToken<ArrayList<SignEntity>>() {
-      }.getType());
-    } catch (Exception ignored) {
-      items = new ArrayList<>();
-    }
-    adapter.setSigns(items);
-
-  } */
+  }
 
   @SuppressLint("DefaultLocale")
   private void setupView() {
@@ -277,16 +269,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   LOGGER.i("Running detection on image " + currTimestamp);
                   final long startTime = SystemClock.uptimeMillis();
                   List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
-                  Log.e("returned results:",results.toString());
                   lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
 
                   cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
                   final Canvas canvas = new Canvas(cropCopyBitmap);
-                  final Paint paint = new Paint();
-                  paint.setColor(Color.RED);
-                  paint.setStyle(Style.STROKE);
-                  paint.setStrokeWidth(2.0f);
+                  //final Paint paint = new Paint();
+                  //paint.setColor(Color.RED);
+                  //paint.setStyle(Style.STROKE);
+                  //paint.setStrokeWidth(2.0f);
 
                   float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
                   switch (MODE) {
@@ -296,16 +287,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   }
 
                   final List<Recognition> mappedRecognitions =
-                          new ArrayList<Recognition>();
+                          new ArrayList<>();
 
                   for (Recognition result : results) {
                     RectF location = result.getLocation();
                     if (location != null && result.getConfidence() >= minimumConfidence) {
-                      //result = classify(result);
-                      //location = result.getLocation();
-                      //For testing:
-                      Recognition result2 = classify(result);
-                      canvas.drawRect(location, paint);
+                      result = classify(result);
+
+                      //canvas.drawRect(location, paint);
 
                       cropToFrameTransform.mapRect(location);
 
@@ -339,6 +328,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private static final float IMAGE_STD = 255.0f;
 
 //This method gets a recognised box of sign and returns the classified sign.
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private Recognition classify (Recognition result){
       Matrix matrix = new Matrix();
       matrix.postRotate(90);
@@ -357,28 +347,60 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       }
       if (crop != null) {
         try {
-          SpeedLimitClassifier speedLimitClassifier = null;
-
-          speedLimitClassifier = SpeedLimitClassifier.classifier(
+          SpeedLimitClassifier speedLimitClassifier = SpeedLimitClassifier.classifier(
                   getAssets(), MODEL_FILENAME);
 
-          List<ClassificationEntity> recognitions2 = null;
-          if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            recognitions2 = speedLimitClassifier.recognizeImage(prepareImageForClassification(crop), getAssets());
-          }
+            Bitmap cropped = prepareImageForClassification(crop);
+            Log.e("crop=",cropped.getHeight()+"");
+          List<ClassificationEntity> recognition =
+                  speedLimitClassifier.recognizeImage(
+                          cropped, getAssets());
 
-          //List<ClassificationEntity> recognitions2 =
-                  //speedLimitClassifier.recognizeImage(prepareImageForClassification(crop), getAssets());
+          // Initialization
+          ImageClassifier.ImageClassifierOptions options =
+                  ImageClassifier.ImageClassifierOptions.builder().setMaxResults(1).setScoreThreshold(0.5f).build();
 
-          Log.e("Classifier", recognitions2.toString());
-          Toast.makeText(getApplicationContext(),recognitions2.toString(),Toast.LENGTH_LONG).show();
+          ImageClassifier imageClassifier = ImageClassifier.createFromFileAndOptions(
+                  getApplicationContext(), "43signs.tflite", options);
+
+          // Run inference
+          List<Classifications> results2 = imageClassifier.classify(
+                  TensorImage.fromBitmap(prepareImageForClassification(crop)));
+
+            try {
+                AutoModel43signs model = AutoModel43signs.newInstance(getApplicationContext());
+
+                // Creates inputs for reference.
+                TensorImage image = TensorImage.fromBitmap(prepareImageForClassification(crop));
+
+                // Runs model inference and gets result.
+                AutoModel43signs.Outputs outputs = model.process(image);
+                List<Category> probability = outputs.getProbabilityAsCategoryList();
+                Log.e("Testing",probability.get(0).getLabel()+" "+probability.get(0).getScore());
+                // Releases model resources if no longer used.
+
+                result.setTitle(probability.get(0).getLabel());
+                result.setConfidence(probability.get(0).getScore());
+
+                model.close();
+            } catch (IOException e) {
+                // TODO Handle the exception
+            }
+
+
+            //result.setTitle(results2.get(0).getCategories().get(0).getLabel());
+            //result.setConfidence(results2.get(0).getCategories().get(0).getScore());
+
+
+
+            //result.setTitle(recognition.get(0).getTitle());
+            //result.setConfidence(recognition.get(0).getConfidence());
+
         } catch (Exception e) {
-          Log.e("SpeedLimitClassifier", e.toString());
+          Log.e("SLClassifier error:", e.toString());
         }
       }
-
-
-      return null;
+      return result;
     }
 
 

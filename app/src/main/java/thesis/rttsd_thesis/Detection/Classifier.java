@@ -51,12 +51,12 @@ public interface Classifier {
         /**
          * Display name for the recognition.
          */
-        private final String title;
+        private String title;
 
         /**
          * A sortable score for how good the recognition is relative to others. Higher should be better.
          */
-        private final Float confidence;
+        private Float confidence;
 
         /**
          * Optional location within the source image for the location of the recognized object.
@@ -104,6 +104,10 @@ public interface Classifier {
         public int getDetectedClass() {
             return detectedClass;
         }
+
+        public void setConfidence(float confidence){this.confidence = confidence;}
+
+        public void setTitle(String title){this.title = title;}
 
         public void setDetectedClass(int detectedClass) {
             this.detectedClass = detectedClass;
