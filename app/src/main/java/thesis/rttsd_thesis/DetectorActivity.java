@@ -347,54 +347,29 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       }
       if (crop != null) {
         try {
-          SpeedLimitClassifier speedLimitClassifier = SpeedLimitClassifier.classifier(
+          /*SpeedLimitClassifier speedLimitClassifier = SpeedLimitClassifier.classifier(
                   getAssets(), MODEL_FILENAME);
 
             Bitmap cropped = prepareImageForClassification(crop);
             Log.e("crop=",cropped.getHeight()+"");
           List<ClassificationEntity> recognition =
                   speedLimitClassifier.recognizeImage(
-                          cropped, getAssets());
+                          cropped, getAssets()); */
 
           // Initialization
           ImageClassifier.ImageClassifierOptions options =
                   ImageClassifier.ImageClassifierOptions.builder().setMaxResults(1).setScoreThreshold(0.5f).build();
 
           ImageClassifier imageClassifier = ImageClassifier.createFromFileAndOptions(
-                  getApplicationContext(), "43signs.tflite", options);
+                  getApplicationContext(), "model43.tflite", options);
 
           // Run inference
           List<Classifications> results2 = imageClassifier.classify(
                   TensorImage.fromBitmap(prepareImageForClassification(crop)));
 
-            try {
-                AutoModel43signs model = AutoModel43signs.newInstance(getApplicationContext());
 
-                // Creates inputs for reference.
-                TensorImage image = TensorImage.fromBitmap(prepareImageForClassification(crop));
-
-                // Runs model inference and gets result.
-                AutoModel43signs.Outputs outputs = model.process(image);
-                List<Category> probability = outputs.getProbabilityAsCategoryList();
-                Log.e("Testing",probability.get(0).getLabel()+" "+probability.get(0).getScore());
-                // Releases model resources if no longer used.
-
-                result.setTitle(probability.get(0).getLabel());
-                result.setConfidence(probability.get(0).getScore());
-
-                model.close();
-            } catch (IOException e) {
-                // TODO Handle the exception
-            }
-
-
-            //result.setTitle(results2.get(0).getCategories().get(0).getLabel());
-            //result.setConfidence(results2.get(0).getCategories().get(0).getScore());
-
-
-
-            //result.setTitle(recognition.get(0).getTitle());
-            //result.setConfidence(recognition.get(0).getConfidence());
+            result.setTitle(results2.get(0).getCategories().get(0).getLabel());
+            result.setConfidence(results2.get(0).getCategories().get(0).getScore());
 
         } catch (Exception e) {
           Log.e("SLClassifier error:", e.toString());
