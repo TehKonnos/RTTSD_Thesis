@@ -34,6 +34,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -70,7 +71,7 @@ import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
-import thesis.rttsd_thesis.ml.AutoModel43signs;
+import thesis.rttsd_thesis.ml.Model43;
 import thesis.rttsd_thesis.model.entity.ClassificationEntity;
 import thesis.rttsd_thesis.model.entity.Data;
 import thesis.rttsd_thesis.model.entity.SignEntity;
@@ -342,34 +343,64 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 (int) result.getLocation().height(),
                 matrix,
                 true);
+        ImageView view = findViewById(R.id.signImg);
+        view.setImageBitmap(crop);
+
       } catch (Exception e) {
         Log.e("Debugging", e.getMessage());
       }
+      //ONLY FOR TEST:
+        MODEL_FILENAME ="model43_no1.tflite";
       if (crop != null) {
         try {
-          /*SpeedLimitClassifier speedLimitClassifier = SpeedLimitClassifier.classifier(
+//Method #1 -Yatzengo
+
+          SpeedLimitClassifier speedLimitClassifier = SpeedLimitClassifier.classifier(
                   getAssets(), MODEL_FILENAME);
 
             Bitmap cropped = prepareImageForClassification(crop);
             Log.e("crop=",cropped.getHeight()+"");
           List<ClassificationEntity> recognition =
                   speedLimitClassifier.recognizeImage(
-                          cropped, getAssets()); */
+                          cropped, getAssets());
 
-          // Initialization
-          ImageClassifier.ImageClassifierOptions options =
-                  ImageClassifier.ImageClassifierOptions.builder().setMaxResults(1).setScoreThreshold(0.5f).build();
+          result.setTitle(recognition.get(0).getTitle());
+          result.setConfidence(recognition.get(0).getConfidence());
 
-          ImageClassifier imageClassifier = ImageClassifier.createFromFileAndOptions(
-                  getApplicationContext(), "model43.tflite", options);
+// Method #2
+            // Initialization
+        /*    ImageClassifier.ImageClassifierOptions options =
+                    ImageClassifier.ImageClassifierOptions.builder().setMaxResults(1).setScoreThreshold(0.5f).setNumThreads(4).build();
 
-          // Run inference
-          List<Classifications> results2 = imageClassifier.classify(
-                  TensorImage.fromBitmap(prepareImageForClassification(crop)));
+            ImageClassifier imageClassifier = ImageClassifier.createFromFileAndOptions(
+                    getApplicationContext(), MODEL_FILENAME, options);
+
+            // Run inference
+            List<Classifications> results2 = imageClassifier.classify(
+                    TensorImage.fromBitmap(prepareImageForClassification(crop)));    */
 
 
-            result.setTitle(results2.get(0).getCategories().get(0).getLabel());
-            result.setConfidence(results2.get(0).getCategories().get(0).getScore());
+            //result.setTitle(results2.get(0).getCategories().get(0).getLabel());
+            //result.setConfidence(results2.get(0).getCategories().get(0).getScore());
+//Method #3
+            try {
+                Model43 model = Model43.newInstance(getApplicationContext());
+
+                // Creates inputs for reference.
+                TensorImage image = TensorImage.fromBitmap(crop);
+
+                // Runs model inference and gets result.
+                Model43.Outputs outputs = model.process(image);
+                List<Category> probability = outputs.getProbabilityAsCategoryList();
+
+                //result.setTitle(probability.get(0).getLabel());
+                //result.setConfidence(probability.get(0).getScore());
+                // Releases model resources if no longer used.
+                model.close();
+            } catch (IOException e) {
+                // TODO Handle the exception
+            }
+
 
         } catch (Exception e) {
           Log.e("SLClassifier error:", e.toString());
