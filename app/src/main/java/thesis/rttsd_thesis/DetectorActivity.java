@@ -336,6 +336,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
       Bitmap crop = null;
       try {
+          Log.e("Some info",result.getLocation().toString());
         crop = Bitmap.createBitmap(rgbFrameBitmap,
                 (int) result.getLocation().left,
                 (int) result.getLocation().top,
