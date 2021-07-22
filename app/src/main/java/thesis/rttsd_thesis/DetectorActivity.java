@@ -332,12 +332,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     @RequiresApi(api = Build.VERSION_CODES.O)
     private Recognition classify (Recognition result){
       Matrix matrix = new Matrix();
-      matrix.postRotate(90);
+      //matrix.postRotate(90);
 
       Bitmap crop = null;
       try {
-          Log.e("Some info",result.getLocation().toString());
-        crop = Bitmap.createBitmap(rgbFrameBitmap,
+        crop = Bitmap.createBitmap(croppedBitmap,
                 (int) result.getLocation().left,
                 (int) result.getLocation().top,
                 (int) result.getLocation().width(),
@@ -345,32 +344,37 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 matrix,
                 true);
         ImageView view = findViewById(R.id.signImg);
+          crop = prepareImageForClassification(crop);
         view.setImageBitmap(crop);
+        Log.e("megethi",crop.getHeight() +" "+crop.getWidth());
 
       } catch (Exception e) {
         Log.e("Debugging", e.getMessage());
       }
       //ONLY FOR TEST:
-        MODEL_FILENAME ="model43_no1.tflite";
+        MODEL_FILENAME ="model43.tflite";
       if (crop != null) {
         try {
+
+            Log.e("megethi",crop.getHeight() +" "+crop.getWidth());
 //Method #1 -Yatzengo
 
           SpeedLimitClassifier speedLimitClassifier = SpeedLimitClassifier.classifier(
                   getAssets(), MODEL_FILENAME);
 
             Bitmap cropped = prepareImageForClassification(crop);
-            Log.e("crop=",cropped.getHeight()+"");
+
+
           List<ClassificationEntity> recognition =
                   speedLimitClassifier.recognizeImage(
                           cropped, getAssets());
 
-          result.setTitle(recognition.get(0).getTitle());
-          result.setConfidence(recognition.get(0).getConfidence());
+          //result.setTitle(recognition.get(0).getTitle());
+          //result.setConfidence(recognition.get(0).getConfidence());
 
 // Method #2
             // Initialization
-        /*    ImageClassifier.ImageClassifierOptions options =
+            ImageClassifier.ImageClassifierOptions options =
                     ImageClassifier.ImageClassifierOptions.builder().setMaxResults(1).setScoreThreshold(0.5f).setNumThreads(4).build();
 
             ImageClassifier imageClassifier = ImageClassifier.createFromFileAndOptions(
@@ -378,11 +382,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
             // Run inference
             List<Classifications> results2 = imageClassifier.classify(
-                    TensorImage.fromBitmap(prepareImageForClassification(crop)));    */
+                    TensorImage.fromBitmap(prepareImageForClassification(crop)));
 
 
-            //result.setTitle(results2.get(0).getCategories().get(0).getLabel());
-            //result.setConfidence(results2.get(0).getCategories().get(0).getScore());
+            result.setTitle(results2.get(0).getCategories().get(0).getLabel());
+            result.setConfidence(results2.get(0).getCategories().get(0).getScore());
 //Method #3
             try {
                 Model43 model = Model43.newInstance(getApplicationContext());
