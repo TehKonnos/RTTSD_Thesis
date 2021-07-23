@@ -71,7 +71,6 @@ import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
-import thesis.rttsd_thesis.ml.Model43;
 import thesis.rttsd_thesis.model.entity.ClassificationEntity;
 import thesis.rttsd_thesis.model.entity.Data;
 import thesis.rttsd_thesis.model.entity.SignEntity;
@@ -387,24 +386,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
             result.setTitle(results2.get(0).getCategories().get(0).getLabel());
             result.setConfidence(results2.get(0).getCategories().get(0).getScore());
-//Method #3
-            try {
-                Model43 model = Model43.newInstance(getApplicationContext());
-
-                // Creates inputs for reference.
-                TensorImage image = TensorImage.fromBitmap(crop);
-
-                // Runs model inference and gets result.
-                Model43.Outputs outputs = model.process(image);
-                List<Category> probability = outputs.getProbabilityAsCategoryList();
-
-                //result.setTitle(probability.get(0).getLabel());
-                //result.setConfidence(probability.get(0).getScore());
-                // Releases model resources if no longer used.
-                model.close();
-            } catch (IOException e) {
-                // TODO Handle the exception
-            }
 
 
         } catch (Exception e) {
