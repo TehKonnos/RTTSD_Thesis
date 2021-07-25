@@ -77,6 +77,7 @@ import thesis.rttsd_thesis.model.entity.SignEntity;
 import thesis.rttsd_thesis.tracking.MultiBoxTracker;
 
 import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
+import static thesis.rttsd_thesis.SpeedLimitClassifier.CLASSIFICATION_THRESHOLD;
 import static thesis.rttsd_thesis.SpeedLimitClassifier.MODEL_FILENAME;
 import static thesis.rttsd_thesis.SpeedLimitClassifier.convertBitmapToByteBuffer;
 
@@ -96,7 +97,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // Minimum detection confidence to track a detection.
   public static float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
   private static final boolean MAINTAIN_ASPECT = true;
-  private static final Size DESIRED_PREVIEW_SIZE = new Size(1024, 1024);
+  private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
   private static final boolean SAVE_PREVIEW_BITMAP = false;
   private static final float TEXT_SIZE_DIP = 10;
   OverlayView trackingOverlay;
@@ -174,10 +175,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       tracker = new MultiBoxTracker(this);
 
       int cropSize = TF_OD_API_INPUT_SIZE;
-      //TODO These must change to fit our dataset ~Kostas
-      int[] output_width = new int[]{1,64512, 6};
-      int[][] masks = new int[][]{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}};
-      int[] anchors = new int[]{2,3, 5,5, 7,8, 17,6,12,12, 20,20, 36,17, 41,40, 98,88};
         try {
             detector =
                     YoloV5Classifier.create(
@@ -185,10 +182,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                             TF_OD_API_MODEL_FILE,
                             TF_OD_API_LABELS_FILE,
                             TF_OD_API_IS_QUANTIZED,
-                            TF_OD_API_INPUT_SIZE
-                            /*output_width,
-                            masks,
-                            anchors*/);
+                            TF_OD_API_INPUT_SIZE);
             //detector.useGpu();
         } catch (final IOException e) {
             e.printStackTrace();
@@ -323,83 +317,64 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               });
     }
 
-
-  private static final int IMAGE_MEAN = 0;
-  private static final float IMAGE_STD = 255.0f;
-
 //This method gets a recognised box of sign and returns the classified sign.
     @RequiresApi(api = Build.VERSION_CODES.O)
     private Recognition classify (Recognition result){
-      Matrix matrix = new Matrix();
-      //matrix.postRotate(90);
+        Matrix matrix = new Matrix();
+        //matrix.postRotate(90);
 
-      Bitmap crop = null;
-      try {
-        crop = Bitmap.createBitmap(croppedBitmap,
+        Bitmap crop = Bitmap.createBitmap(croppedBitmap,
                 (int) result.getLocation().left,
                 (int) result.getLocation().top,
                 (int) result.getLocation().width(),
                 (int) result.getLocation().height(),
                 matrix,
                 true);
-        ImageView view = findViewById(R.id.signImg);
-          crop = prepareImageForClassification(crop);
-        view.setImageBitmap(crop);
-        Log.e("megethi",crop.getHeight() +" "+crop.getWidth());
 
-      } catch (Exception e) {
-        Log.e("Debugging", e.getMessage());
-      }
-      //ONLY FOR TEST:
-        MODEL_FILENAME ="model43.tflite";
-      if (crop != null) {
-        try {
+        if (crop != null) {
+            try {
+                ImageView view = findViewById(R.id.signImg);
+                crop = prepareImageForClassification(crop);
+                view.setImageBitmap(crop);
 
-            Log.e("megethi",crop.getHeight() +" "+crop.getWidth());
 //Method #1 -Yatzengo
 
-          SpeedLimitClassifier speedLimitClassifier = SpeedLimitClassifier.classifier(
-                  getAssets(), MODEL_FILENAME);
+                SpeedLimitClassifier speedLimitClassifier = SpeedLimitClassifier.classifier(
+                      getAssets(), MODEL_FILENAME);
 
-            Bitmap cropped = prepareImageForClassification(crop);
+                Bitmap cropped = prepareImageForClassification(crop);
 
 
-          List<ClassificationEntity> recognition =
-                  speedLimitClassifier.recognizeImage(
-                          cropped, getAssets());
+                List<ClassificationEntity> recognition =
+                      speedLimitClassifier.recognizeImage(
+                             cropped, getAssets());
 
-          //result.setTitle(recognition.get(0).getTitle());
-          //result.setConfidence(recognition.get(0).getConfidence());
+                //result.setTitle(recognition.get(0).getTitle());
+                //result.setConfidence(recognition.get(0).getConfidence());
 
 // Method #2
-            // Initialization
-            ImageClassifier.ImageClassifierOptions options =
-                    ImageClassifier.ImageClassifierOptions.builder().setMaxResults(1).setScoreThreshold(0.5f).setNumThreads(4).build();
+                // Initialization
+                ImageClassifier.ImageClassifierOptions options =
+                        ImageClassifier.ImageClassifierOptions.builder().setMaxResults(1).setScoreThreshold(CLASSIFICATION_THRESHOLD).setNumThreads(4).build();
 
-            ImageClassifier imageClassifier = ImageClassifier.createFromFileAndOptions(
-                    getApplicationContext(), MODEL_FILENAME, options);
+                ImageClassifier imageClassifier = ImageClassifier.createFromFileAndOptions(
+                        getApplicationContext(), MODEL_FILENAME, options);
 
-            // Run inference
-            List<Classifications> results2 = imageClassifier.classify(
-                    TensorImage.fromBitmap(prepareImageForClassification(crop)));
-
-
-            result.setTitle(results2.get(0).getCategories().get(0).getLabel());
-            result.setConfidence(results2.get(0).getCategories().get(0).getScore());
+                // Run inference
+                List<Classifications> results2 = imageClassifier.classify(
+                        TensorImage.fromBitmap(prepareImageForClassification(crop)));
 
 
-        } catch (Exception e) {
-          Log.e("SLClassifier error:", e.toString());
-        }
+                result.setTitle(results2.get(0).getCategories().get(0).getLabel());
+                result.setConfidence(results2.get(0).getCategories().get(0).getScore());
+
+            } catch (Exception e) {
+              Log.e("SLClassifier error:", e.getMessage(),e);
+            }
       }
       return result;
     }
 
-
-    private boolean isRemoveValid (SignEntity sign1, SignEntity sign2){
-      return isTimeDifferenceValid(sign1.getDate(), sign2.getDate())
-              || isLocationDifferenceValid(sign1.getLocation(), sign2.getLocation());
-    }
 
     private boolean isTimeDifferenceValid (Date date1, Date date2){
       long milliseconds = date1.getTime() - date2.getTime();
