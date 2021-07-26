@@ -20,10 +20,7 @@ import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.location.Location;
@@ -42,44 +39,33 @@ import android.widget.Toast;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.SwitchCompat;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.support.image.TensorImage;
 import org.tensorflow.lite.support.label.Category;
-import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 import org.tensorflow.lite.task.vision.classifier.Classifications;
 import org.tensorflow.lite.task.vision.classifier.ImageClassifier;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import io.reactivex.annotations.NonNull;
-import io.reactivex.disposables.CompositeDisposable;
 import thesis.rttsd_thesis.Detection.Classifier;
 import thesis.rttsd_thesis.Detection.Classifier.Recognition;
 import thesis.rttsd_thesis.Detection.YoloV5Classifier;
-import thesis.rttsd_thesis.adapter.SignAdapter;
 import thesis.rttsd_thesis.customview.OverlayView;
 import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
+import thesis.rttsd_thesis.ml.Model224;
+import thesis.rttsd_thesis.ml.Model2243;
 import thesis.rttsd_thesis.model.entity.ClassificationEntity;
 import thesis.rttsd_thesis.model.entity.Data;
-import thesis.rttsd_thesis.model.entity.SignEntity;
 import thesis.rttsd_thesis.tracking.MultiBoxTracker;
 
 import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
 import static thesis.rttsd_thesis.SpeedLimitClassifier.CLASSIFICATION_THRESHOLD;
 import static thesis.rttsd_thesis.SpeedLimitClassifier.MODEL_FILENAME;
-import static thesis.rttsd_thesis.SpeedLimitClassifier.convertBitmapToByteBuffer;
 
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
@@ -91,8 +77,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   // Configuration values for the prepackaged SSD model.
   private static final int TF_OD_API_INPUT_SIZE = 640;
   private static final boolean TF_OD_API_IS_QUANTIZED = false;
-  private static final String TF_OD_API_MODEL_FILE = "sign_recogn.tflite";
-  public static final String TF_OD_API_LABELS_FILE = "sign_recogn.txt";
+  private static final String TF_OD_API_MODEL_FILE = "sign_recognition.tflite";
+  public static final String TF_OD_API_LABELS_FILE = "sign_recognition.txt";
   private static final DetectorMode MODE = DetectorMode.TF_OD_API;
   // Minimum detection confidence to track a detection.
   public static float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
@@ -362,11 +348,33 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                 // Run inference
                 List<Classifications> results2 = imageClassifier.classify(
-                        TensorImage.fromBitmap(prepareImageForClassification(crop)));
+                        TensorImage.fromBitmap(crop));
 
 
                 result.setTitle(results2.get(0).getCategories().get(0).getLabel());
                 result.setConfidence(results2.get(0).getCategories().get(0).getScore());
+
+//Method #3 - Never Worked
+
+                try {
+                    Model2243 model = Model2243.newInstance(getApplicationContext());
+
+                    // Creates inputs for reference.
+                    TensorImage image = TensorImage.fromBitmap(crop);
+
+                    // Runs model inference and gets result.
+                    Model2243.Outputs outputs = model.process(image);
+                    List<Category> probability = outputs.getProbabilityAsCategoryList();
+
+                    //result.setTitle(probability.get(0).getLabel());
+                    //result.setConfidence(probability.get(0).getScore());
+
+                    // Releases model resources if no longer used.
+                    model.close();
+                } catch (IOException e) {
+                    // TODO Handle the exception
+                }
+
 
             } catch (Exception e) {
               Log.e("SLClassifier error:", e.getMessage(),e);
