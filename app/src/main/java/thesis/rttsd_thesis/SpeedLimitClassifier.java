@@ -38,7 +38,7 @@ public class SpeedLimitClassifier {
     private static final int IMAGE_MEAN = 0;
     private static final float IMAGE_STD = 255;
     private static final int MAX_CLASSIFICATION_RESULTS = 3;
-    public static final float CLASSIFICATION_THRESHOLD = 0.0f;
+    public static final float CLASSIFICATION_THRESHOLD = 0.6f;
 
     public static final List<String> OUTPUT_LABELS = Collections.unmodifiableList(
             Arrays.asList(
