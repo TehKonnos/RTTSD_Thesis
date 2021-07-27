@@ -28,17 +28,17 @@ public class SpeedLimitClassifier {
 
     private final Interpreter interpreter;
 
-    public static String MODEL_FILENAME = "model_224_3.tflite";
+    public static String MODEL_FILENAME = "model_224_4.tflite";
 
-    public static final int INPUT_IMG_SIZE_WIDTH = 224;
-    public static final int INPUT_IMG_SIZE_HEIGHT = 224;
+    public static final int INPUT_IMG_SIZE_WIDTH = 32;
+    public static final int INPUT_IMG_SIZE_HEIGHT = 32;
     private static final int FLOAT_TYPE_SIZE = 4;
     private static final int PIXEL_SIZE = 3;
     private static final int MODEL_INPUT_SIZE = FLOAT_TYPE_SIZE * INPUT_IMG_SIZE_WIDTH * INPUT_IMG_SIZE_HEIGHT * PIXEL_SIZE;
     private static final int IMAGE_MEAN = 0;
     private static final float IMAGE_STD = 255;
     private static final int MAX_CLASSIFICATION_RESULTS = 3;
-    public static final float CLASSIFICATION_THRESHOLD = 0.6f;
+    public static final float CLASSIFICATION_THRESHOLD = 0.001f;
 
     public static final List<String> OUTPUT_LABELS = Collections.unmodifiableList(
             Arrays.asList(

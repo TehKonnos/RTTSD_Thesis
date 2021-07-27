@@ -20,7 +20,9 @@ import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.location.Location;
@@ -81,7 +83,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   public static final String TF_OD_API_LABELS_FILE = "sign_recognition.txt";
   private static final DetectorMode MODE = DetectorMode.TF_OD_API;
   // Minimum detection confidence to track a detection.
-  public static float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
+  public static float MINIMUM_CONFIDENCE_TF_OD_API = 0.8f;
   private static final boolean MAINTAIN_ASPECT = true;
   private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
   private static final boolean SAVE_PREVIEW_BITMAP = false;
@@ -92,7 +94,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   //private Detector detector;
   private YoloV5Classifier detector;
-
   private long lastProcessingTimeMs;
   private Bitmap rgbFrameBitmap = null;
   private Bitmap croppedBitmap = null;
@@ -225,7 +226,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         readyForNextImage();
         return;
       }
-      computingDetection = true;
+      computingDetection = false;
       LOGGER.i("Preparing image " + currTimestamp + " for detection in bg thread.");
 
       rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
@@ -251,13 +252,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
                   lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
-
                   cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
-                  final Canvas canvas = new Canvas(cropCopyBitmap);
-                  //final Paint paint = new Paint();
-                  //paint.setColor(Color.RED);
-                  //paint.setStyle(Style.STROKE);
-                  //paint.setStrokeWidth(2.0f);
 
                   float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
                   switch (MODE) {
@@ -268,27 +263,26 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                   final List<Recognition> mappedRecognitions =
                           new ArrayList<>();
-
+                    int stop =0;
                   for (Recognition result : results) {
+                      //if(stop>3) break;
+                      stop++;
                     RectF location = result.getLocation();
                     if (location != null && result.getConfidence() >= minimumConfidence) {
                       result = classify(result);
-
-                      //canvas.drawRect(location, paint);
 
                       cropToFrameTransform.mapRect(location);
 
                       result.setLocation(location);
                       mappedRecognitions.add(result);
 
-                      //runOnUiThread(() -> updateSignList(result, croppedBitmap));
                     }
                   }
 
                   tracker.trackResults(mappedRecognitions, currTimestamp);
                   trackingOverlay.postInvalidate();
 
-                  computingDetection = false;
+                  computingDetection = true;
 
                   runOnUiThread(
                           new Runnable() {
@@ -353,31 +347,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                 result.setTitle(results2.get(0).getCategories().get(0).getLabel());
                 result.setConfidence(results2.get(0).getCategories().get(0).getScore());
-
-//Method #3 - Never Worked
-
-                try {
-                    Model2243 model = Model2243.newInstance(getApplicationContext());
-
-                    // Creates inputs for reference.
-                    TensorImage image = TensorImage.fromBitmap(crop);
-
-                    // Runs model inference and gets result.
-                    Model2243.Outputs outputs = model.process(image);
-                    List<Category> probability = outputs.getProbabilityAsCategoryList();
-
-                    //result.setTitle(probability.get(0).getLabel());
-                    //result.setConfidence(probability.get(0).getScore());
-
-                    // Releases model resources if no longer used.
-                    model.close();
-                } catch (IOException e) {
-                    // TODO Handle the exception
-                }
-
-
             } catch (Exception e) {
               Log.e("SLClassifier error:", e.getMessage(),e);
+              result.setTitle("Other Sign");
             }
       }
       return result;

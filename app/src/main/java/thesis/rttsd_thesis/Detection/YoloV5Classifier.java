@@ -23,6 +23,7 @@ import android.util.Log;
 
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.Tensor;
+import org.tensorflow.lite.gpu.CompatibilityList;
 import org.tensorflow.lite.gpu.GpuDelegate;
 import org.tensorflow.lite.nnapi.NnApiDelegate;
 
@@ -59,17 +60,15 @@ import static thesis.rttsd_thesis.DetectorActivity.TF_OD_API_LABELS_FILE;
  */
 public class YoloV5Classifier implements Classifier {
 
-
+    private static CompatibilityList compatList;
     public static YoloV5Classifier create(
             final AssetManager assetManager,
             final String modelFilename,
             final String labelFilename,
             final boolean isQuantized,
-            final int inputSize
-            /*final int[] output_width,
-            final int[][] masks,
-            final int[] anchors*/)
+            final int inputSize)
             throws IOException {
+        compatList = new CompatibilityList();
         final YoloV5Classifier d = new YoloV5Classifier();
         InputStream labelsInput = assetManager.open(labelFilename);
         BufferedReader br = new BufferedReader(new InputStreamReader(labelsInput));
@@ -90,9 +89,9 @@ public class YoloV5Classifier implements Classifier {
                     d.nnapiDelegate = new NnApiDelegate();
                     options.addDelegate(d.nnapiDelegate);
                     options.setNumThreads(NUM_THREADS);
-//                    options.setUseNNAPI(false);
-//                    options.setAllowFp16PrecisionForFp32(true);
-//                    options.setAllowBufferHandleOutput(true);
+                    options.setUseNNAPI(false);
+                    options.setAllowFp16PrecisionForFp32(true);
+                    options.setAllowBufferHandleOutput(true);
                     options.setUseNNAPI(true);
                 }
             }
@@ -188,8 +187,10 @@ public class YoloV5Classifier implements Classifier {
     }
 
     public void useGpu() {
-        if (gpuDelegate == null) {
-            gpuDelegate = new GpuDelegate();
+        if (gpuDelegate == null && compatList.isDelegateSupportedOnThisDevice()) {
+
+            GpuDelegate.Options delegateOptions = compatList.getBestOptionsForThisDevice();
+            gpuDelegate = new GpuDelegate(delegateOptions);
             tfliteOptions.addDelegate(gpuDelegate);
             recreateInterpreter();
         }
@@ -230,7 +231,7 @@ public class YoloV5Classifier implements Classifier {
     private static final int NUM_BOXES_PER_BLOCK = 3;
 
     // Number of threads in the java app
-    private static final int NUM_THREADS = 1;
+    private static final int NUM_THREADS = 4;
     private static boolean isNNAPI = false;
     private static boolean isGPU = false;
 
@@ -298,6 +299,7 @@ public class YoloV5Classifier implements Classifier {
                 pq.clear();
 
                 for (int j = 1; j < detections.length; j++) {
+
                     Recognition detection = detections[j];
                     RectF b = detection.getLocation();
                     if (box_iou(max.getLocation(), b) < mNmsThresh) {
@@ -309,7 +311,7 @@ public class YoloV5Classifier implements Classifier {
         return nmsList;
     }
 
-    protected float mNmsThresh = 0.6f;
+    protected float mNmsThresh = 0.8f;
 
     protected float box_iou(RectF a, RectF b) {
         return box_intersection(a, b) / box_union(a, b);
@@ -452,7 +454,8 @@ public class YoloV5Classifier implements Classifier {
         return recognitions;
     }
 
-    public boolean checkInvalidateBox(float x, float y, float width, float height, float oriW, float oriH, int intputSize) {
+    public boolean checkInvalidateBox(float x, float y, float width, float height,
+                                      float oriW, float oriH, int intputSize) {
         // (1) (x, y, w, h) --> (xmin, ymin, xmax, ymax)
         float halfHeight = height / 2.0f;
         float halfWidth = width / 2.0f;

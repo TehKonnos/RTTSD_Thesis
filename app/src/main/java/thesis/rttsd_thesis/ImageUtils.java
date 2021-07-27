@@ -16,7 +16,7 @@ public class ImageUtils {
                 bitmap,
                 INPUT_IMG_SIZE_WIDTH,
                 INPUT_IMG_SIZE_HEIGHT,
-                true);
+                false);
         Canvas canvas = new Canvas(finalBitmap);
         canvas.drawBitmap(finalBitmap, 0, 0, paint);
         return finalBitmap;
