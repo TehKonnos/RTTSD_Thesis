@@ -83,7 +83,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   public static final String TF_OD_API_LABELS_FILE = "sign_recognition.txt";
   private static final DetectorMode MODE = DetectorMode.TF_OD_API;
   // Minimum detection confidence to track a detection.
-  public static float MINIMUM_CONFIDENCE_TF_OD_API = 0.8f;
+  public static float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
   private static final boolean MAINTAIN_ASPECT = true;
   private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
   private static final boolean SAVE_PREVIEW_BITMAP = false;
@@ -226,7 +226,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         readyForNextImage();
         return;
       }
-      computingDetection = false;
+      computingDetection = true;
       LOGGER.i("Preparing image " + currTimestamp + " for detection in bg thread.");
 
       rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
@@ -242,10 +242,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
       runInBackground(
               new Runnable() {
-                @RequiresApi(api = Build.VERSION_CODES.O)
                 @Override
                 public void run() {
-
 
                   LOGGER.i("Running detection on image " + currTimestamp);
                   final long startTime = SystemClock.uptimeMillis();
@@ -253,6 +251,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
                   cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
+                    final Canvas canvas = new Canvas(cropCopyBitmap);
+                    final Paint paint = new Paint();
+                    paint.setColor(Color.RED);
+                    paint.setStyle(Paint.Style.STROKE);
+                    paint.setStrokeWidth(2.0f);
 
                   float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
                   switch (MODE) {
@@ -263,13 +266,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                   final List<Recognition> mappedRecognitions =
                           new ArrayList<>();
-                    int stop =0;
+
                   for (Recognition result : results) {
-                      //if(stop>3) break;
-                      stop++;
                     RectF location = result.getLocation();
                     if (location != null && result.getConfidence() >= minimumConfidence) {
                       result = classify(result);
+
+                      canvas.drawRect(location, paint);
 
                       cropToFrameTransform.mapRect(location);
 
@@ -282,7 +285,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   tracker.trackResults(mappedRecognitions, currTimestamp);
                   trackingOverlay.postInvalidate();
 
-                  computingDetection = true;
+                  computingDetection = false;
 
                   runOnUiThread(
                           new Runnable() {
@@ -298,7 +301,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
 
 //This method gets a recognised box of sign and returns the classified sign.
-    @RequiresApi(api = Build.VERSION_CODES.O)
     private Recognition classify (Recognition result){
         Matrix matrix = new Matrix();
         //matrix.postRotate(90);
@@ -319,15 +321,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 //Method #1 -Yatzengo
 
-                SpeedLimitClassifier speedLimitClassifier = SpeedLimitClassifier.classifier(
-                      getAssets(), MODEL_FILENAME);
+                //SpeedLimitClassifier speedLimitClassifier = SpeedLimitClassifier.classifier(
+                //      getAssets(), MODEL_FILENAME);
 
-                Bitmap cropped = prepareImageForClassification(crop);
+              //  Bitmap cropped = prepareImageForClassification(crop);
 
 
-                List<ClassificationEntity> recognition =
-                      speedLimitClassifier.recognizeImage(
-                             cropped, getAssets());
+              //  List<ClassificationEntity> recognition =
+                //      speedLimitClassifier.recognizeImage(
+                  //           cropped, getAssets());
 
                 //result.setTitle(recognition.get(0).getTitle());
                 //result.setConfidence(recognition.get(0).getConfidence());
