@@ -27,7 +27,6 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.location.GpsSatellite;
 import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
@@ -76,7 +75,6 @@ import thesis.rttsd_thesis.model.bus.model.EventUpdateLocation;
 import thesis.rttsd_thesis.model.entity.Data;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
-import static android.location.GpsStatus.GPS_EVENT_SATELLITE_STATUS;
 
 public abstract class CameraActivity extends AppCompatActivity
         implements OnImageAvailableListener,
@@ -137,13 +135,8 @@ public abstract class CameraActivity extends AppCompatActivity
               notificationSpeed = true;
             });
 
-    notification = findViewById(R.id.notification_switch);
-    notification.setOnCheckedChangeListener((buttonView, isChecked) -> {
-      if (!isChecked)
-        mediaPlayerHolder.reset();
-    });
-
     setCallBack();
+    setupViews();
 
     if (hasPermission()) {
       setupLocation();
@@ -166,11 +159,7 @@ public abstract class CameraActivity extends AppCompatActivity
             new ViewTreeObserver.OnGlobalLayoutListener() {
               @Override
               public void onGlobalLayout() {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-                  gestureLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                } else {
-                  gestureLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                }
+                gestureLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                 //                int width = bottomSheetLayout.getMeasuredWidth();
                 int height = gestureLayout.getMeasuredHeight();
 
@@ -199,6 +188,8 @@ public abstract class CameraActivity extends AppCompatActivity
                   case BottomSheetBehavior.STATE_SETTLING:
                     bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_up);
                     break;
+                  case BottomSheetBehavior.STATE_HALF_EXPANDED:
+                    break;
                 }
               }
 
@@ -216,6 +207,8 @@ public abstract class CameraActivity extends AppCompatActivity
     plusImageView.setOnClickListener(this);
     minusImageView.setOnClickListener(this);
   }
+
+  protected abstract void setupViews();
 
   private void setCallBack() {
     compositeDisposable = new CompositeDisposable();
@@ -483,8 +476,8 @@ public abstract class CameraActivity extends AppCompatActivity
 
   protected void requestPermission() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      if (shouldShowRequestPermissionRationale(PERMISSION_CAMERA) ||
-              shouldShowRequestPermissionRationale(ACCESS_FINE_LOCATION)) {
+      if (!shouldShowRequestPermissionRationale(PERMISSION_CAMERA)) {
+        shouldShowRequestPermissionRationale(ACCESS_FINE_LOCATION);
       }
       requestPermissions(new String[]{PERMISSION_CAMERA, ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST);
     }
@@ -492,13 +485,13 @@ public abstract class CameraActivity extends AppCompatActivity
 
   // Returns true if the device supports the required hardware level, or better.
   private boolean isHardwareLevelSupported(
-          CameraCharacteristics characteristics, int requiredLevel) {
+          CameraCharacteristics characteristics) {
     int deviceLevel = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
     if (deviceLevel == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
-      return requiredLevel == deviceLevel;
+      return false;
     }
     // deviceLevel is not LEGACY, can use numerical sort
-    return requiredLevel <= deviceLevel;
+    return android.hardware.camera2.CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_FULL <= deviceLevel;
   }
 
   private String chooseCamera() {
@@ -526,7 +519,7 @@ public abstract class CameraActivity extends AppCompatActivity
         useCamera2API =
                 (facing == CameraCharacteristics.LENS_FACING_EXTERNAL)
                         || isHardwareLevelSupported(
-                        characteristics, CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL);
+                        characteristics);
         LOGGER.i("Camera API lv2?: %s", useCamera2API);
         return cameraId;
       }
@@ -665,7 +658,7 @@ public abstract class CameraActivity extends AppCompatActivity
     }
   }
 
-  private LocationListener locationListener = new LocationListener() {
+  private final LocationListener locationListener = new LocationListener() {
 
     @Override
     public void onLocationChanged(Location location) {
@@ -680,9 +673,6 @@ public abstract class CameraActivity extends AppCompatActivity
       MessageEventBus.INSTANCE.send(new EventUpdateLocation(data));
     }
 
-    @Override
-    public void onStatusChanged(String s, int i, Bundle bundle) {
-    }
 
     @Override
     public void onProviderEnabled(String s) {
@@ -693,6 +683,7 @@ public abstract class CameraActivity extends AppCompatActivity
     }
   };
 
+  @SuppressLint("StaticFieldLeak")
   private class isStopped extends AsyncTask<Void, Integer, String> {
     int timer = 0;
 
@@ -734,16 +725,4 @@ public abstract class CameraActivity extends AppCompatActivity
   public void setNotificationSpeed(Boolean notificationSpeed) {
     this.notificationSpeed = notificationSpeed;
   }
-
-  private GpsStatus.Listener gpsStatus = event -> {
-    switch (event) {
-      case GpsStatus.GPS_EVENT_STOPPED:
-        if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-          MessageEventBus.INSTANCE.send(new EventGpsDisabled());
-        }
-        break;
-      case GpsStatus.GPS_EVENT_FIRST_FIX:
-        break;
-    }
-  };
 }

@@ -124,11 +124,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   }
 
   @SuppressLint("DefaultLocale")
-  private void setupView() {
+  public void setupViews() {
     TextView confidence = findViewById(R.id.confidence_value);
     confidence.setText(String.format("%.2f", MINIMUM_CONFIDENCE_TF_OD_API));
 
-
+      notification = findViewById(R.id.notification_switch);
+      notification.setOnCheckedChangeListener((buttonView, isChecked) -> {
+          if (!isChecked)
+              mediaPlayerHolder.reset();
+      });
 
     SeekBar confidenceSeekBar = findViewById(R.id.confidence_seek);
     confidenceSeekBar.setMax(100);
@@ -279,6 +283,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                       result.setLocation(location);
                       mappedRecognitions.add(result);
 
+                      if(getNotificationSpeed()) playSound(result.getTitle());
+
                     }
                   }
 
@@ -300,10 +306,146 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               });
     }
 
-//This method gets a recognised box of sign and returns the classified sign.
+    @SuppressLint("ResourceType")
+    private void playSound(String title) {
+        setNotificationSpeed(false);
+        switch(title)
+        {
+            case "Speed limit (20km/h)":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_20);
+                break;
+            case "Speed limit (30km/h)":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_20);
+                break;
+            case "Speed limit (50km/h)":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_30);
+                break;
+            case "Speed limit (60km/h)":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Speed limit (70km/h)":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Speed limit (80km/h)":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "End of speed limit (80km/h)":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Speed limit (100km/h)":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Speed limit (120km/h)":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "No passing":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "No passing for vehicles over 3.5 metric tons":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Right-of-way at the next intersection":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Priority road":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Yield":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Stop":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "No vehicles":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Vehicles over 3.5 metric tons prohibited":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "No entry":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "General caution":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Dangerous curve to the left":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Dangerous curve to the right":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Double curve":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Bumpy road":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Slippery road":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Road narrows on the right":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Road work":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Traffic signals":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Pedestrians":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Children crossing":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Bicycles crossing":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Beware of ice/snow":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Wild animals crossing":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "End of all speed and passing limits":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Turn right ahead":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Ahead only":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Go straight or right":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Go straight or left":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Keep right":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Keep left":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "Roundabout mandatory":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "End of no passing":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            case "End of no passing by vehicles over 3.5 metric tons":
+                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
+                break;
+            default:
+                break;
+        }
+    }
+
+    //This method gets a recognised box of sign and returns the classified sign.
     private Recognition classify (Recognition result){
         Matrix matrix = new Matrix();
-        //matrix.postRotate(90);
+        matrix.postRotate(0);
 
         Bitmap crop = Bitmap.createBitmap(croppedBitmap,
                 (int) result.getLocation().left,
