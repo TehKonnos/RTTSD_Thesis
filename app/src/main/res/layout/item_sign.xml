@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center"
-    android:background="@color/cardview_light_background"
+    android:background="@color/design_default_color_primary_dark"
     
     android:orientation="horizontal"
     android:paddingStart="32dp"
