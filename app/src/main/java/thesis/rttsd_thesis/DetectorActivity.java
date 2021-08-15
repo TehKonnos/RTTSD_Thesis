@@ -252,7 +252,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   LOGGER.i("Running detection on image " + currTimestamp);
                   final long startTime = SystemClock.uptimeMillis();
                   List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
-                  lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+
 
                   cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
                     final Canvas canvas = new Canvas(cropCopyBitmap);
@@ -287,6 +287,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                     }
                   }
+                  lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
                   tracker.trackResults(mappedRecognitions, currTimestamp);
                   trackingOverlay.postInvalidate();

@@ -28,19 +28,104 @@ public class SpeedLimitClassifier {
 
     private final Interpreter interpreter;
 
-    public static String MODEL_FILENAME = "model_32.tflite";
+    public static String MODEL_FILENAME = "model82Q.tflite";
 
-    public static final int INPUT_IMG_SIZE_WIDTH = 32;
-    public static final int INPUT_IMG_SIZE_HEIGHT = 32;
+    public static final int INPUT_IMG_SIZE_WIDTH = 64;
+    public static final int INPUT_IMG_SIZE_HEIGHT = 64;
     private static final int FLOAT_TYPE_SIZE = 4;
     private static final int PIXEL_SIZE = 3;
     private static final int MODEL_INPUT_SIZE = FLOAT_TYPE_SIZE * INPUT_IMG_SIZE_WIDTH * INPUT_IMG_SIZE_HEIGHT * PIXEL_SIZE;
-    private static final int IMAGE_MEAN = 0;
-    private static final float IMAGE_STD = 255;
+    private static final float IMAGE_MEAN = 127.5f;
+    private static final float IMAGE_STD = 127.5f;
     private static final int MAX_CLASSIFICATION_RESULTS = 3;
-    public static final float CLASSIFICATION_THRESHOLD = 0.001f;
+    public static final float CLASSIFICATION_THRESHOLD = 0.8f;
 
-    public static final List<String> OUTPUT_LABELS = Collections.unmodifiableList(
+    public static final List<String> OUTPUT_LABELS = Collections.unmodifiableList((Arrays.asList(
+            "regulatory--bicycles-only",
+            "regulatory--end-of-no-parking",
+            "regulatory--end-of-priority-road",
+            "regulatory--go-straight",
+            "regulatory--go-straight-or-turn-left",
+            "regulatory--go-straight-or-turn-right",
+            "regulatory--height-limit",
+            "regulatory--keep-left",
+            "regulatory--keep-right",
+            "regulatory--maximum-speed-limit-20",
+            "regulatory--maximum-speed-limit-30",
+            "regulatory--maximum-speed-limit-40",
+            "regulatory--maximum-speed-limit-50",
+            "regulatory--maximum-speed-limit-60",
+            "regulatory--maximum-speed-limit-70",
+            "regulatory--maximum-speed-limit-80",
+            "regulatory--maximum-speed-limit-90",
+            "regulatory--maximum-speed-limit-100",
+            "regulatory--maximum-speed-limit-110",
+            "regulatory--maximum-speed-limit-120",
+            "regulatory--no-bicycles",
+            "regulatory--no-entry",
+            "regulatory--no-heavy-goods-vehicles",
+            "regulatory--no-left-turn",
+            "regulatory--no-motor-vehicles-except-motorcycles",
+            "regulatory--no-motorcycles",
+            "regulatory--no-overtaking",
+            "regulatory--no-parking",
+            "regulatory--no-parking-or-no-stopping",
+            "regulatory--no-pedestrians",
+            "regulatory--no-right-turn",
+            "regulatory--no-stopping",
+            "regulatory--no-u-turn",
+            "regulatory--one-way-left",
+            "regulatory--one-way-right",
+            "regulatory--one-way-straight",
+            "regulatory--pass-on-either-side",
+            "regulatory--pedestrians-only",
+            "regulatory--priority-road",
+            "regulatory--road-closed-to-vehicles",
+            "regulatory--roundabout",
+            "regulatory--shared-path-pedestrians-and-bicycles",
+            "regulatory--stop",
+            "regulatory--turn-left",
+            "regulatory--turn-right",
+            "regulatory--weight-limit",
+            "regulatory--yield",
+            "information--disabled-persons",
+            "information--end-of-motorway",
+            "information--highway-exit",
+            "information--motorway",
+            "information--parking",
+            "information--pedestrians-crossing",
+            "warning--children",
+            "warning--crossroads",
+            "warning--curve-left",
+            "warning--curve-right",
+            "warning--double-curve-first-left",
+            "warning--double-curve-first-right",
+            "warning--junction-with-a-side-road-perpendicular-left",
+            "warning--junction-with-a-side-road-perpendicular-right",
+            "warning--other-danger",
+            "warning--pedestrians-crossing",
+            "warning--railroad-crossing",
+            "warning--railroad-crossing-without-barriers",
+            "warning--road-bump",
+            "warning--road-narrows",
+            "warning--road-narrows-left",
+            "warning--road-narrows-right",
+            "warning--roadworks",
+            "warning--roundabout",
+            "warning--slippery-road-surface",
+            "warning--traffic-merges-right",
+            "warning--traffic-signals",
+            "warning--two-way-traffic",
+            "warning--uneven-road",
+            "complementary--chevron-left",
+            "complementary--chevron-right",
+            "complementary--distance",
+            "complementary--go-left",
+            "complementary--go-right",
+            "complementary--obstacle-delineator"
+    )));
+
+    /* public static final List<String> OUTPUT_LABELS = Collections.unmodifiableList(
             Arrays.asList(
                     "Speed limit (20km/h)",
                     "Speed limit (30km/h)",
@@ -85,7 +170,7 @@ public class SpeedLimitClassifier {
                     "Roundabout mandatory",
                     "End of no passing",
                     "End of no passing by vehicles over 3.5 metric tons"
-            ));
+            )); */
 
     private SpeedLimitClassifier(Interpreter interpreter) {
         this.interpreter = interpreter;
