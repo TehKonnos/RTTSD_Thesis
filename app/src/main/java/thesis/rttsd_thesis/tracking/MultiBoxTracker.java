@@ -15,6 +15,7 @@ limitations under the License.
 
 package thesis.rttsd_thesis.tracking;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -31,12 +32,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import thesis.rttsd_thesis.Detection.Classifier;
 import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.Detection.Classifier.Recognition;
-//import thesis.rttsd_thesis.Detection.Detector.Recognition;
 
 /** A tracker that handles non-max suppression and matches existing objects to new detections. */
 public class MultiBoxTracker {
@@ -146,7 +145,7 @@ public class MultiBoxTracker {
       float cornerSize = Math.min(trackedPos.width(), trackedPos.height()) / 8.0f;
       canvas.drawRoundRect(trackedPos, cornerSize, cornerSize, boxPaint);
 
-      final String labelString =
+      @SuppressLint("DefaultLocale") final String labelString =
               !TextUtils.isEmpty(recognition.title)
                       ? String.format("%s %.2f", recognition.title, (100 * recognition.detectionConfidence))
                       : String.format("%.2f", (100 * recognition.detectionConfidence));
@@ -197,12 +196,8 @@ public class MultiBoxTracker {
       trackedRecognition.location = new RectF(potential.second.getLocation());
       trackedRecognition.title = potential.second.getTitle();
       trackedRecognition.color = COLORS[trackedObjects.size() % COLORS.length];
-      //trackedRecognition.color = COLORS[potential.second.getDetectedClass() % COLORS.length];
       trackedObjects.add(trackedRecognition);
 
-//      if (trackedObjects.size() >= COLORS.length) {
-//        break;
-//      }
     }
   }
 

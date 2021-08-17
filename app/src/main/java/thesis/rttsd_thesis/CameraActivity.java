@@ -105,9 +105,9 @@ public abstract class CameraActivity extends AppCompatActivity
 
   protected TextView frameValueTextView, cropValueTextView, inferenceTimeTextView;
   protected ImageView bottomSheetArrowImageView;
-  private ImageView plusImageView, minusImageView;
+  private ImageView plusImageView, minusImageView, plus2ImageView, minus2ImageView;
   private SwitchCompat apiSwitchCompat;
-  private TextView threadsTextView;
+  private TextView threadsTextView,signsTextView;
 
   private Boolean notificationSpeed = true;
   private TextView currentSpeed;
@@ -148,11 +148,18 @@ public abstract class CameraActivity extends AppCompatActivity
     threadsTextView = findViewById(R.id.threads);
     plusImageView = findViewById(R.id.plus);
     minusImageView = findViewById(R.id.minus);
+    signsTextView = findViewById(R.id.signs);
+    plus2ImageView = findViewById(R.id.plus2);
+    minus2ImageView = findViewById(R.id.minus2);
     apiSwitchCompat = findViewById(R.id.api_info_switch);
     bottomSheetLayout = findViewById(R.id.bottom_sheet_layout);
     gestureLayout = findViewById(R.id.gesture_layout);
     sheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
     bottomSheetArrowImageView = findViewById(R.id.bottom_sheet_arrow);
+
+
+
+
 
     ViewTreeObserver vto = gestureLayout.getViewTreeObserver();
     vto.addOnGlobalLayoutListener(
@@ -206,6 +213,11 @@ public abstract class CameraActivity extends AppCompatActivity
 
     plusImageView.setOnClickListener(this);
     minusImageView.setOnClickListener(this);
+
+    signsTextView.setOnClickListener(this);
+    plus2ImageView.setOnClickListener(this);
+    minus2ImageView.setOnClickListener(this);
+
   }
 
   protected abstract void setupViews();
@@ -611,17 +623,31 @@ public abstract class CameraActivity extends AppCompatActivity
       numThreads++;
       threadsTextView.setText(String.valueOf(numThreads));
       setNumThreads(numThreads);
-    } else if (v.getId() == R.id.minus) {
+    }else if (v.getId() == R.id.minus) {
       String threads = threadsTextView.getText().toString().trim();
       int numThreads = Integer.parseInt(threads);
-      if (numThreads == 1) {
-        return;
-      }
+      if (numThreads == 1) return;
       numThreads--;
       threadsTextView.setText(String.valueOf(numThreads));
       setNumThreads(numThreads);
+    }else if(v.getId() == R.id.plus2){
+      String signs = signsTextView.getText().toString().trim();
+      int numSigns = Integer.parseInt(signs);
+      if (numSigns >= 9) return;
+      numSigns++;
+      signsTextView.setText(String.valueOf(numSigns));
+      setMaximumResults(numSigns);
+    }else if(v.getId() == R.id.minus2){
+      String signs = signsTextView.getText().toString().trim();
+      int numSigns = Integer.parseInt(signs);
+      if (numSigns == 1) return;
+      numSigns--;
+      signsTextView.setText(String.valueOf(numSigns));
+      setMaximumResults(numSigns);
     }
   }
+
+  protected abstract void setMaximumResults(int numSigns);
 
   protected void showFrameInfo(String frameInfo) {
     frameValueTextView.setText(frameInfo);

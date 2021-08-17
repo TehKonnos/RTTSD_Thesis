@@ -4,11 +4,11 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
-import static thesis.rttsd_thesis.SpeedLimitClassifier.INPUT_IMG_SIZE_HEIGHT;
-import static thesis.rttsd_thesis.SpeedLimitClassifier.INPUT_IMG_SIZE_WIDTH;
-
 
 public class ImageUtils {
+
+    public static final int INPUT_IMG_SIZE_WIDTH = 64;
+    public static final int INPUT_IMG_SIZE_HEIGHT = 64;
 
     public static Bitmap prepareImageForClassification(Bitmap bitmap) {
         Paint paint = new Paint();

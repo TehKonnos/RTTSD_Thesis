@@ -27,7 +27,6 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.location.Location;
 import android.media.ImageReader.OnImageAvailableListener;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -38,11 +37,9 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.SwitchCompat;
 
 import org.tensorflow.lite.support.image.TensorImage;
-import org.tensorflow.lite.support.label.Category;
 import org.tensorflow.lite.task.vision.classifier.Classifications;
 import org.tensorflow.lite.task.vision.classifier.ImageClassifier;
 
@@ -59,15 +56,11 @@ import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
-import thesis.rttsd_thesis.ml.Model224;
-import thesis.rttsd_thesis.ml.Model2243;
-import thesis.rttsd_thesis.model.entity.ClassificationEntity;
 import thesis.rttsd_thesis.model.entity.Data;
 import thesis.rttsd_thesis.tracking.MultiBoxTracker;
 
 import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
-import static thesis.rttsd_thesis.SpeedLimitClassifier.CLASSIFICATION_THRESHOLD;
-import static thesis.rttsd_thesis.SpeedLimitClassifier.MODEL_FILENAME;
+
 
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
@@ -88,11 +81,16 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
   private static final boolean SAVE_PREVIEW_BITMAP = false;
   private static final float TEXT_SIZE_DIP = 10;
+
+  //For Classification
+  public static final float CLASSIFICATION_THRESHOLD = 0.8f;
+  public static String MODEL_FILENAME = "model82.tflite";
+
+  private int maximumResults = 3;
   OverlayView trackingOverlay;
 
   private Integer sensorOrientation;
 
-  //private Detector detector;
   private YoloV5Classifier detector;
   private long lastProcessingTimeMs;
   private Bitmap rgbFrameBitmap = null;
@@ -271,11 +269,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   final List<Recognition> mappedRecognitions =
                           new ArrayList<>();
 
+                  int cResults = 0;
                   for (Recognition result : results) {
                     RectF location = result.getLocation();
                     if (location != null && result.getConfidence() >= minimumConfidence) {
                       result = classify(result);
 
+                      cResults++;
+                      if (cResults > maximumResults) break;
                       canvas.drawRect(location, paint);
 
                       cropToFrameTransform.mapRect(location);
@@ -312,131 +313,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         setNotificationSpeed(false);
         switch(title)
         {
-            case "Speed limit (20km/h)":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_20);
-                break;
-            case "Speed limit (30km/h)":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_20);
-                break;
-            case "Speed limit (50km/h)":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_30);
-                break;
-            case "Speed limit (60km/h)":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Speed limit (70km/h)":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Speed limit (80km/h)":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "End of speed limit (80km/h)":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Speed limit (100km/h)":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Speed limit (120km/h)":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "No passing":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "No passing for vehicles over 3.5 metric tons":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Right-of-way at the next intersection":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Priority road":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Yield":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Stop":
+            case "regulatory--stop":
                 mediaPlayerHolder.loadMedia(R.raw.stop);
-                break;
-            case "No vehicles":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Vehicles over 3.5 metric tons prohibited":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "No entry":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "General caution":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Dangerous curve to the left":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Dangerous curve to the right":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Double curve":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Bumpy road":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Slippery road":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Road narrows on the right":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Road work":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Traffic signals":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Pedestrians":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Children crossing":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Bicycles crossing":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Beware of ice/snow":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Wild animals crossing":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "End of all speed and passing limits":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Turn right ahead":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Ahead only":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Go straight or right":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Go straight or left":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Keep right":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Keep left":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "Roundabout mandatory":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "End of no passing":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
-                break;
-            case "End of no passing by vehicles over 3.5 metric tons":
-                //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded);
                 break;
             default:
                 break;
@@ -462,20 +340,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 crop = prepareImageForClassification(crop);
                 view.setImageBitmap(crop);
 
-//Method #1 -Yatzengo
-
-                //SpeedLimitClassifier speedLimitClassifier = SpeedLimitClassifier.classifier(
-                //      getAssets(), MODEL_FILENAME);
-
-              //  Bitmap cropped = prepareImageForClassification(crop);
-
-
-              //  List<ClassificationEntity> recognition =
-                //      speedLimitClassifier.recognizeImage(
-                  //           cropped, getAssets());
-
-                //result.setTitle(recognition.get(0).getTitle());
-                //result.setConfidence(recognition.get(0).getConfidence());
 
 // Method #2
                 // Initialization
@@ -548,5 +412,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     @Override
     protected void setNumThreads ( final int numThreads){
       runInBackground(() -> detector.setNumThreads(numThreads));
+    }
+    public void setMaximumResults(int maximumResults) {
+        this.maximumResults = maximumResults;
     }
 }

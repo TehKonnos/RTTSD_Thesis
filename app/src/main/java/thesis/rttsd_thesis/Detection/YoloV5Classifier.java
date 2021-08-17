@@ -395,6 +395,7 @@ public class YoloV5Classifier implements Classifier {
 
         float[][][] out = new float[1][output_box][numClass + 5];
         Log.d("YoloV5Classifier", "out[0] detect start");
+
         for (int i = 0; i < output_box; ++i) {
             for (int j = 0; j < numClass + 5; ++j) {
                 if (isModelQuantized){
