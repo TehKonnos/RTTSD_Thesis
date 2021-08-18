@@ -84,7 +84,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   //For Classification
   public static final float CLASSIFICATION_THRESHOLD = 0.8f;
-  public static String MODEL_FILENAME = "model82.tflite";
+  public static String MODEL_FILENAME = "model82Q.tflite";
 
   private int maximumResults = 3;
   OverlayView trackingOverlay;
