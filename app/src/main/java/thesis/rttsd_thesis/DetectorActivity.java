@@ -71,8 +71,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   // Configuration values for the prepackaged SSD model.
   private static final int TF_OD_API_INPUT_SIZE = 640;
-  private static final boolean TF_OD_API_IS_QUANTIZED = false;
-  private static final String TF_OD_API_MODEL_FILE = "sign_recognition.tflite";
+  private static final boolean TF_OD_API_IS_QUANTIZED = true;
+  private static final String TF_OD_API_MODEL_FILE = "sign_recognitionQ.tflite";
   public static final String TF_OD_API_LABELS_FILE = "sign_recognition.txt";
   private static final DetectorMode MODE = DetectorMode.TF_OD_API;
   // Minimum detection confidence to track a detection.
