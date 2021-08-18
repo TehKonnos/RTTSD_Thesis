@@ -83,8 +83,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private static final float TEXT_SIZE_DIP = 10;
 
   //For Classification
-  public static final float CLASSIFICATION_THRESHOLD = 0.6f;
-  public static String MODEL_FILENAME = "model82Q.tflite";
+  public static float CLASSIFICATION_THRESHOLD = 0.6f;
+  public static String MODEL_FILENAME = "model82.tflite";
 
   private int maximumResults = 3;
   OverlayView trackingOverlay;
@@ -124,7 +124,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   @SuppressLint("DefaultLocale")
   public void setupViews() {
     TextView confidence = findViewById(R.id.confidence_value);
-    confidence.setText(String.format("%.2f", MINIMUM_CONFIDENCE_TF_OD_API));
+    confidence.setText(String.format("%.2f", CLASSIFICATION_THRESHOLD));
 
       notification = findViewById(R.id.notification_switch);
       notification.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -139,8 +139,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     confidenceSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
       @Override
       public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        MINIMUM_CONFIDENCE_TF_OD_API = progress / 100.0F;
-        confidence.setText(String.format("%.2f", MINIMUM_CONFIDENCE_TF_OD_API));
+          CLASSIFICATION_THRESHOLD = progress / 100.0F;
+        confidence.setText(String.format("%.2f", CLASSIFICATION_THRESHOLD));
       }
 
       @Override
