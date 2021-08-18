@@ -83,7 +83,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private static final float TEXT_SIZE_DIP = 10;
 
   //For Classification
-  public static final float CLASSIFICATION_THRESHOLD = 0.8f;
+  public static final float CLASSIFICATION_THRESHOLD = 0.6f;
   public static String MODEL_FILENAME = "model82Q.tflite";
 
   private int maximumResults = 3;
