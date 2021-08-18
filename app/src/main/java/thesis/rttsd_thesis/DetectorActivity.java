@@ -358,7 +358,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 result.setConfidence(results2.get(0).getCategories().get(0).getScore());
             } catch (Exception e) {
               Log.e("SLClassifier error:", e.getMessage(),e);
-              result.setTitle("Other Sign");
+              result.setTitle("Sign");
             }
       }
       return result;
