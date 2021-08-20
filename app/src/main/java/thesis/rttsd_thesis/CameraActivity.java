@@ -59,7 +59,6 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
-
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 
@@ -68,6 +67,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
+import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
 import thesis.rttsd_thesis.model.bus.MessageEventBus;
 import thesis.rttsd_thesis.model.bus.model.EventGpsDisabled;
 import thesis.rttsd_thesis.model.bus.model.EventUpdateLocation;
@@ -110,6 +110,8 @@ public abstract class CameraActivity extends AppCompatActivity
   private Boolean notificationSpeed = true;
   private TextView currentSpeed;
   private SwitchCompat notification;
+
+  private MediaPlayerHolder mediaPlayerHolder;
 
   private LocationManager mLocationManager;
   private int speedLimit = 0;
@@ -263,7 +265,7 @@ public abstract class CameraActivity extends AppCompatActivity
 
       if (speed > this.speedLimit && notification.isChecked() && getNotificationSpeed()) {
         setNotificationSpeed(false);
-        //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded); //Play default TODO
+        mediaPlayerHolder.loadMedia(R.raw.speed_limit_exceeded);
       }
       currentSpeed.setText("Current Speed: "+(int) speed+" km/h");
     }

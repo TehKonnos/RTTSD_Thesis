@@ -311,179 +311,190 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     private void playSound(String title) {
         setNotificationSpeed(false);
         switch (title.trim()) {
-            case "Prohibited parking zone ends":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
-                break;
             case "Priority road ends":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.priority_road_ends_3);
+                break;
+            case "Go straight ahead":
+                mediaPlayerHolder.loadMedia(R.raw.go_straight_ahead_4);
                 break;
             case "Go straight ahead or turn left":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.go_straight_ahead_or_turn_left_5);
                 break;
             case "Go straight ahead or turn right":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.go_straight_ahead_or_turn_right_6);
                 break;
             case "Passing left mandatory":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.passing_left_mandatory_8);
                 break;
             case "Passing right mandatory":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.passing_right_mandatory_9);
                 break;
             case "Max speed limit 20km/h":
                 setSpeedLimit(20);
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.maxsl_20kmh_10);
                 break;
             case "Max speed limit 30km/h":
                 setSpeedLimit(30);
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.maxsl_30kmh_11);
                 break;
             case "Max speed limit 40km/h":
-                Log.e("MediaSound","Mesa sto case");
                 setSpeedLimit(40);
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.maxsl_40kmh_12);
                 break;
             case "Max speed limit 50km/h":
                 setSpeedLimit(50);
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.maxsl_50kmh_13);
                 break;
             case "Max speed limit 60km/h":
                 setSpeedLimit(60);
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.maxsl_60kmh_14);
                 break;
             case "Max speed limit 70km/h":
                 setSpeedLimit(70);
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.maxsl_70kmh_15);
                 break;
             case "Max speed limit 80km/h":
                 setSpeedLimit(80);
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.maxsl_80kmh_16);
                 break;
             case "Max speed limit 90km/h":
                 setSpeedLimit(90);
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.maxsl_90kmh_17);
                 break;
             case "Max speed limit 100km/h":
                 setSpeedLimit(100);
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.maxsl_100kmh_18);
                 break;
             case "Max speed limit 110km/h":
                 setSpeedLimit(110);
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.maxsl_110kmh_19);
                 break;
             case "Max speed limit 120km/h":
                 setSpeedLimit(120);
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.maxsl_120kmh_20);
+                break;
+            case "Cyclists prohibited":
+                mediaPlayerHolder.loadMedia(R.raw.cyclists_prohibited_21);
                 break;
             case "No vehicle entry":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.no_vehicle_entry_22);
                 break;
             case "Turning left prohibited":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.turning_left_prohibited_24);
                 break;
             case "Cars prohibited":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.cars_prohibited_25);
+                break;
+            case "Motorcycles prohibited":
+                mediaPlayerHolder.loadMedia(R.raw.motorcycles_prohibited_26);
                 break;
             case "Turning right prohibited":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.turning_right_prohibited_31);
+                break;
+            case "Parking and stopping prohibited":
+                mediaPlayerHolder.loadMedia(R.raw.parking_and_stopping_prohibited_32);
                 break;
             case "U-turn prohibited":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.u_turn_prohibited_33);
                 break;
             case "Mandatory one-way left":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.mandatory_one_way_34_35_36);
                 break;
             case "Mandatory one-way right":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.mandatory_one_way_34_35_36);
                 break;
             case "Mandatory one-way traffic":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.mandatory_one_way_34_35_36);
                 break;
             case "Passing left or right mandatory":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.passing_left_or_right_37);
                 break;
             case "Pedestrians only path":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.pedestrians_only_path_38);
+                break;
+            case "Priority road":
+                mediaPlayerHolder.loadMedia(R.raw.priority_road_39);
+                break;
+            case "Stop":
+                mediaPlayerHolder.loadMedia(R.raw.stop_43);
                 break;
             case "Turning left mandatory":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.turning_left_mandatory_44);
                 break;
             case "Turning right mandatory":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.turning_right_mandatory_45);
                 break;
             case "Give way":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.give_way_47);
                 break;
             case "Crossing for pedestrians":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.crossing_for_pedestrians_53);
                 break;
             case "Children crossing":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.children_crossing_54);
                 break;
             case "Crossroad w/ side roads left and right":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.crossroad_left_n_right_55);
                 break;
             case "Curve left":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.curve_left_56);
                 break;
             case "Curve right":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.curve_right_57);
                 break;
             case "Double curve - first left":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.double_curve_58_59);
                 break;
             case "Double curve - first right":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.double_curve_58_59);
                 break;
             case "Crossroad w/ side road left":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.crossroad_left_side_road_60);
                 break;
             case "Crossroad w/ side road right":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.crossroad_right_side_road_61);
                 break;
             case "Other danger":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.other_danger_62);
                 break;
             case "Pedestrians crossing":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.pedestrians_crossing_63);
                 break;
             case "Railroad crossing":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.railroad_crossing_64);
                 break;
             case "Railroad crossing without barriers":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.railroad_crossing_without_barriers_65);
                 break;
             case "Speed bump":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.speed_bump_66);
                 break;
             case "Road narrows":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.road_narrows_67);
                 break;
             case "Road narrows left":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.road_narrows_left_68);
                 break;
             case "Road narrows right":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.road_narrows_right_69);
                 break;
             case "Roadworks":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.roadworks_70);
                 break;
             case "Roundabout":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.roundabout_71);
                 break;
             case "Slippery road surface":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
-                break;
-            case "Crossroad w/ sharp side road right":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.slippery_road_surface_72);
                 break;
             case "Traffic light":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.traffic_light_74);
                 break;
             case "Two-way traffic":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.two_way_traffic_75);
                 break;
             case "Uneven road":
-                mediaPlayerHolder.loadMedia(R.raw.stop);
+                mediaPlayerHolder.loadMedia(R.raw.uneven_road_76);
                 break;
             default:
                 setNotificationSpeed(true);
@@ -562,7 +573,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     // Which detection model to use: by default uses Tensorflow Object Detection API frozen
     // checkpoints.
     private enum DetectorMode {
-      TF_OD_API;
+      TF_OD_API
     }
 
     @Override
