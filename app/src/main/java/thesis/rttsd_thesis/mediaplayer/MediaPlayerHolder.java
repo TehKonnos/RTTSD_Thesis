@@ -3,6 +3,7 @@ package thesis.rttsd_thesis.mediaplayer;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.annotation.IdRes;
 
@@ -37,13 +38,13 @@ public class MediaPlayerHolder implements MediaPlayerAdapter {
     @Override
     public void loadMedia(@IdRes int resId) {
         initializeMediaPlayer();
-/*
-        if (isPlaying() && resId != R.raw.exceeded_speed_limit){
+
+        if (isPlaying() && resId != R.raw.speed_limit_was_exceeded){
             soundList.add(resId);
             return;
-        }8\*/
+        }
         Uri mediaPath = Uri.parse("android.resource://" + context.getPackageName() + "/" + resId);
-
+        Log.e("MediaSound","Eimai edw1");
         try {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(context, mediaPath);

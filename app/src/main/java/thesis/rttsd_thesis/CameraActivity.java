@@ -68,7 +68,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
-import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
 import thesis.rttsd_thesis.model.bus.MessageEventBus;
 import thesis.rttsd_thesis.model.bus.model.EventGpsDisabled;
 import thesis.rttsd_thesis.model.bus.model.EventUpdateLocation;
@@ -106,15 +105,14 @@ public abstract class CameraActivity extends AppCompatActivity
   protected TextView frameValueTextView, cropValueTextView, inferenceTimeTextView;
   protected ImageView bottomSheetArrowImageView;
   private ImageView plusImageView, minusImageView, plus2ImageView, minus2ImageView;
-  private SwitchCompat apiSwitchCompat;
   private TextView threadsTextView,signsTextView;
 
   private Boolean notificationSpeed = true;
   private TextView currentSpeed;
   private SwitchCompat notification;
-  private MediaPlayerHolder mediaPlayerHolder;
 
   private LocationManager mLocationManager;
+  private int speedLimit = 0;
 
   private CompositeDisposable compositeDisposable;
   Data data;
@@ -128,11 +126,11 @@ public abstract class CameraActivity extends AppCompatActivity
 
     setContentView(R.layout.tfe_od_activity_camera);
 
-    Observable.interval(30L, TimeUnit.SECONDS)
+    Observable.interval(10L, TimeUnit.SECONDS)
             .timeInterval()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(v -> {
-              notificationSpeed = true;
+              this.notificationSpeed = true;
             });
 
     setCallBack();
@@ -151,14 +149,11 @@ public abstract class CameraActivity extends AppCompatActivity
     signsTextView = findViewById(R.id.signs);
     plus2ImageView = findViewById(R.id.plus2);
     minus2ImageView = findViewById(R.id.minus2);
-    apiSwitchCompat = findViewById(R.id.api_info_switch);
     bottomSheetLayout = findViewById(R.id.bottom_sheet_layout);
     gestureLayout = findViewById(R.id.gesture_layout);
     sheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
     bottomSheetArrowImageView = findViewById(R.id.bottom_sheet_arrow);
-
-
-
+    notification = findViewById(R.id.notification_switch);
 
 
     ViewTreeObserver vto = gestureLayout.getViewTreeObserver();
@@ -209,7 +204,6 @@ public abstract class CameraActivity extends AppCompatActivity
     cropValueTextView = findViewById(R.id.crop_info);
     inferenceTimeTextView = findViewById(R.id.inference_info);
 
-    apiSwitchCompat.setOnCheckedChangeListener(this);
 
     plusImageView.setOnClickListener(this);
     minusImageView.setOnClickListener(this);
@@ -266,10 +260,10 @@ public abstract class CameraActivity extends AppCompatActivity
     currentSpeed = findViewById(R.id.currentSpeed);
     if (data.getLocation().hasSpeed()) {
       double speed = data.getLocation().getSpeed() * 3.6;
-      //TODO Get Current Speed Limit  and replace number <50>
-      if (speed > 50 && notification.isChecked() && getNotificationSpeed()) {
+
+      if (speed > this.speedLimit && notification.isChecked() && getNotificationSpeed()) {
         setNotificationSpeed(false);
-        //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded); //Play default
+        //mediaPlayerHolder.loadMedia(R.raw.speed_limit_was_exceeded); //Play default TODO
       }
       currentSpeed.setText("Current Speed: "+(int) speed+" km/h");
     }
@@ -608,13 +602,6 @@ public abstract class CameraActivity extends AppCompatActivity
   }
 
   @Override
-  public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-    setUseNNAPI(isChecked);
-    if (isChecked) apiSwitchCompat.setText("NNAPI");
-    else apiSwitchCompat.setText("TFLITE");
-  }
-
-  @Override
   public void onClick(View v) {
     if (v.getId() == R.id.plus) {
       String threads = threadsTextView.getText().toString().trim();
@@ -751,4 +738,6 @@ public abstract class CameraActivity extends AppCompatActivity
   public void setNotificationSpeed(Boolean notificationSpeed) {
     this.notificationSpeed = notificationSpeed;
   }
+
+  public void setSpeedLimit(int speedLimit){this.speedLimit = speedLimit;}
 }

@@ -32,6 +32,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -56,7 +57,6 @@ import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
-import thesis.rttsd_thesis.model.entity.Data;
 import thesis.rttsd_thesis.tracking.MultiBoxTracker;
 
 import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
@@ -84,7 +84,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   //For Classification
   public static float CLASSIFICATION_THRESHOLD = 0.6f;
-  public static String MODEL_FILENAME = "model82_Float.tflite";
+  public static String MODEL_FILENAME = "model82Q.tflite";
 
   private int maximumResults = 3;
   OverlayView trackingOverlay;
@@ -106,8 +106,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   private MultiBoxTracker tracker;
 
-  private Data data;
-  private TextView currentSpeed;
   private SwitchCompat notification;
   private BorderedText borderedText;
   private MediaPlayerHolder mediaPlayerHolder;
@@ -126,14 +124,16 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     TextView confidence = findViewById(R.id.confidence_value);
     confidence.setText(String.format("%.2f", CLASSIFICATION_THRESHOLD));
 
-      notification = findViewById(R.id.notification_switch);
-      notification.setOnCheckedChangeListener((buttonView, isChecked) -> {
-          if (!isChecked)
-              mediaPlayerHolder.reset();
-      });
+    mediaPlayerHolder = new MediaPlayerHolder(getApplicationContext());
+
+    notification = findViewById(R.id.notification_switch);
+    notification.setOnCheckedChangeListener((buttonView, isChecked) -> {
+      if (!isChecked)
+          mediaPlayerHolder.reset();
+    });
 
     SeekBar confidenceSeekBar = findViewById(R.id.confidence_seek);
-    confidenceSeekBar.setMax(100);
+    confidenceSeekBar.setMax(99);
     confidenceSeekBar.setProgress((int) (MINIMUM_CONFIDENCE_TF_OD_API * 100));
 
     confidenceSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -172,7 +172,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                             TF_OD_API_LABELS_FILE,
                             TF_OD_API_IS_QUANTIZED,
                             TF_OD_API_INPUT_SIZE);
-            //detector.useGpu();
         } catch (final IOException e) {
             e.printStackTrace();
             LOGGER.e(e, "Exception initializing classifier!");
@@ -284,7 +283,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                       result.setLocation(location);
                       mappedRecognitions.add(result);
 
-                      if(getNotificationSpeed()) playSound(result.getTitle());
+                      if(getNotificationSpeed() && notification.isChecked()) playSound(result.getTitle());
 
                     }
                   }
@@ -311,12 +310,189 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     @SuppressLint("ResourceType")
     private void playSound(String title) {
         setNotificationSpeed(false);
-        switch(title)
-        {
-            case "regulatory--stop":
+        String a = title;
+        String b = "Max speed limit 40km/h";
+        Log.e("MediaSound",a);
+        Log.e("MediaSound",b);
+        Log.e("MediaSound","---------");
+        if(a.equals(b)) Log.e("MediaSound","Mesa sto if");
+        switch (title) {
+            case "Prohibited parking zone ends":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Priority road ends":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Go straight ahead or turn left":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Go straight ahead or turn right":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Passing left mandatory":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Passing right mandatory":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Max speed limit 20km/h":
+                setSpeedLimit(20);
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Max speed limit 30km/h":
+                setSpeedLimit(30);
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Max speed limit 40km/h":
+                Log.e("MediaSound","Mesa sto case");
+                setSpeedLimit(40);
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Max speed limit 50km/h":
+                setSpeedLimit(50);
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Max speed limit 60km/h":
+                setSpeedLimit(60);
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Max speed limit 70km/h":
+                setSpeedLimit(70);
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Max speed limit 80km/h":
+                setSpeedLimit(80);
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Max speed limit 90km/h":
+                setSpeedLimit(90);
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Max speed limit 100km/h":
+                setSpeedLimit(100);
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Max speed limit 110km/h":
+                setSpeedLimit(110);
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Max speed limit 120km/h":
+                setSpeedLimit(120);
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "No vehicle entry":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Turning left prohibited":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Cars prohibited":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Turning right prohibited":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "U-turn prohibited":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Mandatory one-way left":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Mandatory one-way right":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Mandatory one-way traffic":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Passing left or right mandatory":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Pedestrians only path":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Turning left mandatory":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Turning right mandatory":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Give way":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Crossing for pedestrians":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Children crossing":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Crossroad w/ side roads left and right":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Curve left":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Curve right":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Double curve - first left":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Double curve - first right":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Crossroad w/ side road left":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Crossroad w/ side road right":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Other danger":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Pedestrians crossing":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Railroad crossing":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Railroad crossing without barriers":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Speed bump":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Road narrows":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Road narrows left":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Road narrows right":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Roadworks":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Roundabout":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Slippery road surface":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Crossroad w/ sharp side road right":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Traffic light":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Two-way traffic":
+                mediaPlayerHolder.loadMedia(R.raw.stop);
+                break;
+            case "Uneven road":
                 mediaPlayerHolder.loadMedia(R.raw.stop);
                 break;
             default:
+                setNotificationSpeed(true);
                 break;
         }
     }
@@ -340,8 +516,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 crop = prepareImageForClassification(crop);
                 view.setImageBitmap(crop);
 
-
-// Method #2
                 // Initialization
                 ImageClassifier.ImageClassifierOptions options =
                         ImageClassifier.ImageClassifierOptions.builder().setMaxResults(1).setScoreThreshold(CLASSIFICATION_THRESHOLD).setNumThreads(4).build();
@@ -352,7 +526,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 // Run inference
                 List<Classifications> results2 = imageClassifier.classify(
                         TensorImage.fromBitmap(crop));
-
 
                 result.setTitle(results2.get(0).getCategories().get(0).getLabel());
                 result.setConfidence(results2.get(0).getCategories().get(0).getScore());
@@ -385,6 +558,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     @Override
     protected Size getDesiredPreviewFrameSize () {
       return DESIRED_PREVIEW_SIZE;
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
     }
 
     // Which detection model to use: by default uses Tensorflow Object Detection API frozen
