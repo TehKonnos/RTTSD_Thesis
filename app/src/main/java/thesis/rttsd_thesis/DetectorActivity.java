@@ -310,13 +310,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     @SuppressLint("ResourceType")
     private void playSound(String title) {
         setNotificationSpeed(false);
-        String a = title;
-        String b = "Max speed limit 40km/h";
-        Log.e("MediaSound",a);
-        Log.e("MediaSound",b);
-        Log.e("MediaSound","---------");
-        if(a.equals(b)) Log.e("MediaSound","Mesa sto if");
-        switch (title) {
+        switch (title.trim()) {
             case "Prohibited parking zone ends":
                 mediaPlayerHolder.loadMedia(R.raw.stop);
                 break;

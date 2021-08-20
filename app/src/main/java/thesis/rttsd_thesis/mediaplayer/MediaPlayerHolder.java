@@ -44,7 +44,6 @@ public class MediaPlayerHolder implements MediaPlayerAdapter {
             return;
         }
         Uri mediaPath = Uri.parse("android.resource://" + context.getPackageName() + "/" + resId);
-        Log.e("MediaSound","Eimai edw1");
         try {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(context, mediaPath);
