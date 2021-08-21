@@ -39,7 +39,7 @@ public class MediaPlayerHolder implements MediaPlayerAdapter {
     public void loadMedia(@IdRes int resId) {
         initializeMediaPlayer();
 
-        if (isPlaying() && resId != R.raw.speed_limit_was_exceeded){
+        if (isPlaying() && resId != R.raw.speed_limit_exceeded){
             soundList.add(resId);
             return;
         }

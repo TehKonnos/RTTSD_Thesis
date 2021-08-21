@@ -741,5 +741,7 @@ public abstract class CameraActivity extends AppCompatActivity
     this.notificationSpeed = notificationSpeed;
   }
 
-  public void setSpeedLimit(int speedLimit){this.speedLimit = speedLimit;}
+  public void setSpeedLimit(int speedLimit) {
+    this.speedLimit = speedLimit;
+  }
 }
