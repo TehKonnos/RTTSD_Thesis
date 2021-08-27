@@ -18,19 +18,14 @@ package thesis.rttsd_thesis.env;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Paint.Align;
 import android.graphics.Paint.Style;
-import android.graphics.Rect;
 import android.graphics.Typeface;
 
-import java.util.Vector;
 
 /** A class that encapsulates the tedious bits of rendering legible, bordered text onto a canvas. */
 public class BorderedText {
   private final Paint interiorPaint;
   private final Paint exteriorPaint;
-
-  private final float textSize;
 
   /**
    * Creates a left-aligned bordered text object with a white interior, and a black exterior with
@@ -66,7 +61,6 @@ public class BorderedText {
     exteriorPaint.setAntiAlias(false);
     exteriorPaint.setAlpha(255);
 
-    this.textSize = textSize;
   }
 
   public void setTypeface(Typeface typeface) {
@@ -90,17 +84,6 @@ public class BorderedText {
     canvas.drawRect(posX, (posY + (int) (textSize)), (posX + (int) (width)), posY, paint);
 
     canvas.drawText(text, posX, (posY + textSize), interiorPaint);
-  }
-
-  public void drawLines(Canvas canvas, final float posX, final float posY, Vector<String> lines) {
-    int lineNum = 0;
-    for (final String line : lines) {
-      drawText(canvas, posX, posY - getTextSize() * (lines.size() - lineNum - 1), line);
-      ++lineNum;
-    }
-  }
-  public float getTextSize() {
-    return textSize;
   }
 
 }

@@ -39,11 +39,9 @@ import java.util.List;
 
 import thesis.rttsd_thesis.customview.AutoFitTextureView;
 import thesis.rttsd_thesis.env.ImageUtils;
-import thesis.rttsd_thesis.env.Logger;
 
 @SuppressLint("ValidFragment")
 public class LegacyCameraConnectionFragment extends Fragment {
-  private static final Logger LOGGER = new Logger();
   /** Conversion from screen rotation to JPEG orientation. */
   private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
 
@@ -55,10 +53,10 @@ public class LegacyCameraConnectionFragment extends Fragment {
   }
 
   private Camera camera;
-  private Camera.PreviewCallback imageListener;
-  private Size desiredSize;
+  private final Camera.PreviewCallback imageListener;
+  private final Size desiredSize;
   /** The layout identifier to inflate for this Fragment. */
-  private int layout;
+  private final int layout;
   /** An {@link AutoFitTextureView} for camera preview. */
   private AutoFitTextureView textureView;
   private SurfaceTexture availableSurfaceTexture = null;
@@ -106,7 +104,7 @@ public class LegacyCameraConnectionFragment extends Fragment {
 
   @Override
   public void onViewCreated(final View view, final Bundle savedInstanceState) {
-    textureView = (AutoFitTextureView) view.findViewById(R.id.texture);
+    textureView = view.findViewById(R.id.texture);
   }
 
   @Override
@@ -149,8 +147,7 @@ public class LegacyCameraConnectionFragment extends Fragment {
     try {
       backgroundThread.join();
       backgroundThread = null;
-    } catch (final InterruptedException e) {
-      LOGGER.e(e, "Exception!");
+    } catch (final InterruptedException ignored) {
     }
   }
 

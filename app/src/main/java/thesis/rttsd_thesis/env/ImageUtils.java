@@ -18,6 +18,7 @@ package thesis.rttsd_thesis.env;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.os.Environment;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -28,8 +29,7 @@ public class ImageUtils {
   // are normalized to eight bits.
   static final int kMaxChannelValue = 262143;
 
-  @SuppressWarnings("unused")
-  private static final Logger LOGGER = new Logger();
+
 
   /**
    * Utility method to compute the allocated size in bytes of a YUV420SP image of the given
@@ -64,15 +64,9 @@ public class ImageUtils {
   public static void saveBitmap(final Bitmap bitmap, final String filename) {
     final String root =
         Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "tensorflow";
-    LOGGER.i("Saving %dx%d bitmap to %s.", bitmap.getWidth(), bitmap.getHeight(), root);
     final File myDir = new File(root);
 
-    if (!myDir.mkdirs()) {
-      LOGGER.i("Make dir failed");
-    }
-
-    final String fname = filename;
-    final File file = new File(myDir, fname);
+    final File file = new File(myDir, filename);
     if (file.exists()) {
       file.delete();
     }
@@ -82,7 +76,7 @@ public class ImageUtils {
       out.flush();
       out.close();
     } catch (final Exception e) {
-      LOGGER.e(e, "Exception!");
+      Log.e("ImageUtils",e.getMessage());
     }
   }
 
@@ -107,7 +101,7 @@ public class ImageUtils {
 
   private static int YUV2RGB(int y, int u, int v) {
     // Adjust and check YUV values
-    y = (y - 16) < 0 ? 0 : (y - 16);
+    y = Math.max((y - 16), 0);
     u -= 128;
     v -= 128;
 
@@ -122,9 +116,9 @@ public class ImageUtils {
     int b = (y1192 + 2066 * u);
 
     // Clipping RGB values to be inside boundaries [ 0 , kMaxChannelValue ]
-    r = r > kMaxChannelValue ? kMaxChannelValue : (r < 0 ? 0 : r);
-    g = g > kMaxChannelValue ? kMaxChannelValue : (g < 0 ? 0 : g);
-    b = b > kMaxChannelValue ? kMaxChannelValue : (b < 0 ? 0 : b);
+    r = r > kMaxChannelValue ? kMaxChannelValue : (Math.max(r, 0));
+    g = g > kMaxChannelValue ? kMaxChannelValue : (Math.max(g, 0));
+    b = b > kMaxChannelValue ? kMaxChannelValue : (Math.max(b, 0));
 
     return 0xff000000 | ((r << 6) & 0xff0000) | ((g >> 2) & 0xff00) | ((b >> 10) & 0xff);
   }
@@ -176,10 +170,6 @@ public class ImageUtils {
     final Matrix matrix = new Matrix();
 
     if (applyRotation != 0) {
-      if (applyRotation % 90 != 0) {
-        LOGGER.w("Rotation of %d % 90 != 0", applyRotation);
-      }
-
       // Translate so center of image is at origin.
       matrix.postTranslate(-srcWidth / 2.0f, -srcHeight / 2.0f);
 

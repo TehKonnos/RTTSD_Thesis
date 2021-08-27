@@ -27,7 +27,6 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -41,6 +40,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Trace;
+import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.View;
@@ -66,7 +66,6 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import thesis.rttsd_thesis.env.ImageUtils;
-import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
 import thesis.rttsd_thesis.model.bus.MessageEventBus;
 import thesis.rttsd_thesis.model.bus.model.EventGpsDisabled;
@@ -80,7 +79,6 @@ public abstract class CameraActivity extends AppCompatActivity
         Camera.PreviewCallback,
         CompoundButton.OnCheckedChangeListener,
         View.OnClickListener {
-  private static final Logger LOGGER = new Logger();
   private static final int PERMISSIONS_REQUEST = 1;
   private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
   protected int previewWidth = 0;
@@ -115,7 +113,6 @@ public abstract class CameraActivity extends AppCompatActivity
   @SuppressLint("CheckResult")
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
-    LOGGER.d("onCreate " + this);
     super.onCreate(null);
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -228,9 +225,7 @@ public abstract class CameraActivity extends AppCompatActivity
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
     builder.setTitle(getString(R.string.gps_disabled))
             .setMessage(getString(R.string.please_enable_gps))
-            .setNegativeButton(android.R.string.cancel, (dialog, id) -> {
-              dialog.cancel();
-            })
+            .setNegativeButton(android.R.string.cancel, (dialog, id) -> dialog.cancel())
             .setPositiveButton(android.R.string.ok, (dialog, id) -> startActivity(new Intent("android.settings.LOCATION_SOURCE_SETTINGS")));
     AlertDialog dialog = builder.create();
     dialog.setCancelable(true);
@@ -270,11 +265,6 @@ public abstract class CameraActivity extends AppCompatActivity
    */
   @Override
   public void onPreviewFrame(final byte[] bytes, final Camera camera) {
-    if (isProcessingFrame) {
-      LOGGER.w("Dropping frame!");
-      return;
-    }
-
     try {
       // Initialize the storage bitmaps once when the resolution is known.
       if (rgbBytes == null) {
@@ -285,7 +275,6 @@ public abstract class CameraActivity extends AppCompatActivity
         onPreviewSizeChosen(new Size(previewSize.width, previewSize.height), 90);
       }
     } catch (final Exception e) {
-      LOGGER.e(e, "Exception!");
       return;
     }
 
@@ -355,7 +344,6 @@ public abstract class CameraActivity extends AppCompatActivity
 
       processImage();
     } catch (final Exception e) {
-      LOGGER.e(e, "Exception!");
       Trace.endSection();
       return;
     }
@@ -364,13 +352,11 @@ public abstract class CameraActivity extends AppCompatActivity
 
   @Override
   public synchronized void onStart() {
-    LOGGER.d("onStart " + this);
     super.onStart();
   }
 
   @Override
   public synchronized void onResume() {
-    LOGGER.d("onResume " + this);
     super.onResume();
 
     handlerThread = new HandlerThread("inference");
@@ -386,7 +372,7 @@ public abstract class CameraActivity extends AppCompatActivity
       handlerThread = null;
       handler = null;
     } catch (final InterruptedException e) {
-      LOGGER.e(e, "Exception!");
+        Log.e("onPause",e.getMessage());
     }
     super.onPause();
   }
@@ -487,11 +473,10 @@ public abstract class CameraActivity extends AppCompatActivity
                 (facing == CameraCharacteristics.LENS_FACING_EXTERNAL)
                         || isHardwareLevelSupported(
                         characteristics);
-        LOGGER.i("Camera API lv2?: %s", useCamera2API);
         return cameraId;
       }
     } catch (CameraAccessException e) {
-      LOGGER.e(e, "Not allowed to access camera");
+      Log.e("CameraAccess", "Not allowed to access camera");
     }
 
     return null;
@@ -528,7 +513,6 @@ public abstract class CameraActivity extends AppCompatActivity
     for (int i = 0; i < planes.length; ++i) {
       final ByteBuffer buffer = planes[i].getBuffer();
       if (yuvBytes[i] == null) {
-        LOGGER.d("Initializing buffer %d at size %d", i, buffer.capacity());
         yuvBytes[i] = new byte[buffer.capacity()];
       }
       buffer.get(yuvBytes[i]);

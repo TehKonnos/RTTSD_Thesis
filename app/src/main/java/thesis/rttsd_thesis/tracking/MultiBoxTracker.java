@@ -30,11 +30,9 @@ import android.util.Pair;
 import android.util.TypedValue;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
-import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.Detection.Classifier.Recognition;
 
 /** A tracker that handles non-max suppression and matches existing objects to new detections. */
@@ -58,12 +56,9 @@ public class MultiBoxTracker {
           Color.parseColor("#AA33AA"),
           Color.parseColor("#0D0068")
   };
-  final List<Pair<Float, RectF>> screenRects = new LinkedList<Pair<Float, RectF>>();
-  private final Logger logger = new Logger();
-  private final Queue<Integer> availableColors = new LinkedList<Integer>();
-  private final List<TrackedRecognition> trackedObjects = new LinkedList<TrackedRecognition>();
+  final List<Pair<Float, RectF>> screenRects = new LinkedList<>();
+  private final List<TrackedRecognition> trackedObjects = new LinkedList<>();
   private final Paint boxPaint = new Paint();
-  private final float textSizePx;
   private final BorderedText borderedText;
   private Matrix frameToCanvasMatrix;
   private int frameWidth;
@@ -71,10 +66,6 @@ public class MultiBoxTracker {
   private int sensorOrientation;
 
   public MultiBoxTracker(final Context context) {
-    for (final int color : COLORS) {
-      availableColors.add(color);
-    }
-
     boxPaint.setColor(Color.RED);
     boxPaint.setStyle(Style.STROKE);
     boxPaint.setStrokeWidth(10.0f);
@@ -82,9 +73,8 @@ public class MultiBoxTracker {
     boxPaint.setStrokeJoin(Join.ROUND);
     boxPaint.setStrokeMiter(100);
 
-    textSizePx =
-            TypedValue.applyDimension(
-                    TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DIP, context.getResources().getDisplayMetrics());
+    float textSizePx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DIP, context.getResources().getDisplayMetrics());
     borderedText = new BorderedText(textSizePx);
   }
 
@@ -113,8 +103,7 @@ public class MultiBoxTracker {
     }
   }
 
-  public synchronized void trackResults(final List<Recognition> results, final long timestamp) {
-    logger.i("Processing %d results from %d", results.size(), timestamp);
+  public synchronized void trackResults(final List<Recognition> results) {
     processResults(results);
   }
 
@@ -157,7 +146,7 @@ public class MultiBoxTracker {
   }
 
   private void processResults(final List<Recognition> results) {
-    final List<Pair<Float, Recognition>> rectsToTrack = new LinkedList<Pair<Float, Recognition>>();
+    final List<Pair<Float, Recognition>> rectsToTrack = new LinkedList<>();
 
     screenRects.clear();
     final Matrix rgbFrameToScreen = new Matrix(getFrameToCanvasMatrix());
@@ -171,22 +160,18 @@ public class MultiBoxTracker {
       final RectF detectionScreenRect = new RectF();
       rgbFrameToScreen.mapRect(detectionScreenRect, detectionFrameRect);
 
-      logger.v(
-              "Result! Frame: " + result.getLocation() + " mapped to screen:" + detectionScreenRect);
 
-      screenRects.add(new Pair<Float, RectF>(result.getConfidence(), detectionScreenRect));
+      screenRects.add(new Pair<>(result.getConfidence(), detectionScreenRect));
 
       if (detectionFrameRect.width() < MIN_SIZE || detectionFrameRect.height() < MIN_SIZE) {
-        logger.w("Degenerate rectangle! " + detectionFrameRect);
         continue;
       }
 
-      rectsToTrack.add(new Pair<Float, Recognition>(result.getConfidence(), result));
+      rectsToTrack.add(new Pair<>(result.getConfidence(), result));
     }
 
     trackedObjects.clear();
     if (rectsToTrack.isEmpty()) {
-      logger.v("Nothing to track, aborting.");
       return;
     }
 

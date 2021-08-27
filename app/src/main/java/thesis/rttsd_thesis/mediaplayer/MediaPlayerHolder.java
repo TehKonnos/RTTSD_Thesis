@@ -13,10 +13,10 @@ import java.util.List;
 
 public class MediaPlayerHolder implements MediaPlayerAdapter {
     private MediaPlayer mediaPlayer;
-    private Context context;
+    private final Context context;
 
     @IdRes
-    private List<Integer> soundList = new ArrayList<>();
+    private final List<Integer> soundList = new ArrayList<>();
 
     public MediaPlayerHolder(Context context) {
         this.context = context;
@@ -25,12 +25,8 @@ public class MediaPlayerHolder implements MediaPlayerAdapter {
     private void initializeMediaPlayer() {
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
-            mediaPlayer.setOnPreparedListener(mp -> {
-                mediaPlayer.start();
-            });
-            mediaPlayer.setOnCompletionListener(mp -> {
-                playNext();
-            });
+            mediaPlayer.setOnPreparedListener(mp -> mediaPlayer.start());
+            mediaPlayer.setOnCompletionListener(mp -> playNext());
         }
     }
 
@@ -46,7 +42,7 @@ public class MediaPlayerHolder implements MediaPlayerAdapter {
         try {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(context, mediaPath);
-        } catch (Exception e) {}
+        } catch (Exception ignored) {}
 
         try {
             mediaPlayer.prepare();

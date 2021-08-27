@@ -23,7 +23,6 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.res.Configuration;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
@@ -43,7 +42,6 @@ import android.media.ImageReader.OnImageAvailableListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.text.TextUtils;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
@@ -63,11 +61,9 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import thesis.rttsd_thesis.customview.AutoFitTextureView;
-import thesis.rttsd_thesis.env.Logger;
 
 @SuppressLint("ValidFragment")
 public class CameraConnectionFragment extends Fragment {
-  private static final Logger LOGGER = new Logger();
 
   /**
    * The camera preview size will be chosen to be the smallest frame by pixel size capable of
@@ -215,8 +211,8 @@ public class CameraConnectionFragment extends Fragment {
 
     // Collect the supported resolutions that are at least as big as the preview Surface
     boolean exactSizeFound = false;
-    final List<Size> bigEnough = new ArrayList<Size>();
-    final List<Size> tooSmall = new ArrayList<Size>();
+    final List<Size> bigEnough = new ArrayList<>();
+    final List<Size> tooSmall = new ArrayList<>();
     for (final Size option : choices) {
       if (option.equals(desiredSize)) {
         // Set the size but don't return yet so that remaining sizes will still be logged.
@@ -230,22 +226,14 @@ public class CameraConnectionFragment extends Fragment {
       }
     }
 
-    LOGGER.i("Desired size: " + desiredSize + ", min size: " + minSize + "x" + minSize);
-    LOGGER.i("Valid preview sizes: [" + TextUtils.join(", ", bigEnough) + "]");
-    LOGGER.i("Rejected preview sizes: [" + TextUtils.join(", ", tooSmall) + "]");
-
     if (exactSizeFound) {
-      LOGGER.i("Exact size match found.");
       return desiredSize;
     }
 
     // Pick the smallest of those, assuming we found any
     if (bigEnough.size() > 0) {
-      final Size chosenSize = Collections.min(bigEnough, new CompareSizesByArea());
-      LOGGER.i("Chosen size: " + chosenSize.getWidth() + "x" + chosenSize.getHeight());
-      return chosenSize;
+      return Collections.min(bigEnough, new CompareSizesByArea());
     } else {
-      LOGGER.e("Couldn't find any suitable preview size");
       return choices[0];
     }
   }
@@ -261,18 +249,12 @@ public class CameraConnectionFragment extends Fragment {
   /**
    * Shows a {@link Toast} on the UI thread.
    *
-   * @param text The message to show
    */
-  private void showToast(final String text) {
+  private void showToast() {
     final Activity activity = getActivity();
     if (activity != null) {
       activity.runOnUiThread(
-          new Runnable() {
-            @Override
-            public void run() {
-              Toast.makeText(activity, text, Toast.LENGTH_SHORT).show();
-            }
-          });
+              () -> Toast.makeText(activity, "Failed", Toast.LENGTH_SHORT).show());
     }
   }
 
@@ -284,7 +266,7 @@ public class CameraConnectionFragment extends Fragment {
 
   @Override
   public void onViewCreated(final View view, final Bundle savedInstanceState) {
-    textureView = (AutoFitTextureView) view.findViewById(R.id.texture);
+    textureView = view.findViewById(R.id.texture);
   }
 
   @Override
@@ -347,8 +329,7 @@ public class CameraConnectionFragment extends Fragment {
       } else {
         textureView.setAspectRatio(previewSize.getHeight(), previewSize.getWidth());
       }
-    } catch (final CameraAccessException e) {
-      LOGGER.e(e, "Exception!");
+    } catch (final CameraAccessException ignored) {
     } catch (final NullPointerException e) {
       // Currently an NPE is thrown when the Camera2API is used but not supported on the
       // device this code runs.
@@ -372,8 +353,7 @@ public class CameraConnectionFragment extends Fragment {
         throw new RuntimeException("Time out waiting to lock camera opening.");
       }
       manager.openCamera(cameraId, stateCallback, backgroundHandler);
-    } catch (final CameraAccessException e) {
-      LOGGER.e(e, "Exception!");
+    } catch (final CameraAccessException ignored) {
     } catch (final InterruptedException e) {
       throw new RuntimeException("Interrupted while trying to lock camera opening.", e);
     }
@@ -416,8 +396,7 @@ public class CameraConnectionFragment extends Fragment {
       backgroundThread.join();
       backgroundThread = null;
       backgroundHandler = null;
-    } catch (final InterruptedException e) {
-      LOGGER.e(e, "Exception!");
+    } catch (final InterruptedException ignored) {
     }
   }
 
@@ -437,7 +416,6 @@ public class CameraConnectionFragment extends Fragment {
       previewRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
       previewRequestBuilder.addTarget(surface);
 
-      LOGGER.i("Opening camera preview: " + previewSize.getWidth() + "x" + previewSize.getHeight());
 
       // Create the reader for the preview frames.
       previewReader =
@@ -474,19 +452,17 @@ public class CameraConnectionFragment extends Fragment {
                 previewRequest = previewRequestBuilder.build();
                 captureSession.setRepeatingRequest(
                     previewRequest, captureCallback, backgroundHandler);
-              } catch (final CameraAccessException e) {
-                LOGGER.e(e, "Exception!");
+              } catch (final CameraAccessException ignored) {
               }
             }
 
             @Override
             public void onConfigureFailed(final CameraCaptureSession cameraCaptureSession) {
-              showToast("Failed");
+              showToast();
             }
           },
           null);
-    } catch (final CameraAccessException e) {
-      LOGGER.e(e, "Exception!");
+    } catch (final CameraAccessException ignored) {
     }
   }
 
@@ -561,12 +537,7 @@ public class CameraConnectionFragment extends Fragment {
           .setMessage(getArguments().getString(ARG_MESSAGE))
           .setPositiveButton(
               android.R.string.ok,
-              new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(final DialogInterface dialogInterface, final int i) {
-                  activity.finish();
-                }
-              })
+                  (dialogInterface, i) -> activity.finish())
           .create();
     }
   }

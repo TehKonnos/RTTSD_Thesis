@@ -49,7 +49,6 @@ import thesis.rttsd_thesis.Detection.YoloV5Classifier;
 import thesis.rttsd_thesis.customview.OverlayView;
 import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
-import thesis.rttsd_thesis.env.Logger;
 import thesis.rttsd_thesis.tracking.MultiBoxTracker;
 
 import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
@@ -60,7 +59,6 @@ import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
  * objects.
  */
 public class DetectorActivity extends CameraActivity implements OnImageAvailableListener {
-  private static final Logger LOGGER = new Logger();
 
   // Configuration values for the prepackaged SSD model.
   private static final int TF_OD_API_INPUT_SIZE = 640;
@@ -89,8 +87,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private Bitmap cropCopyBitmap = null;
 
   private boolean computingDetection = false;
-
-  private long timestamp = 0;
 
   private Matrix frameToCropTransform;
   private Matrix cropToFrameTransform;
@@ -160,7 +156,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                             TF_OD_API_INPUT_SIZE);
         } catch (final IOException e) {
             e.printStackTrace();
-            LOGGER.e(e, "Exception initializing classifier!");
             Toast toast =
                     Toast.makeText(
                             getApplicationContext(), "Classifier could not be initialized", Toast.LENGTH_SHORT);
@@ -172,9 +167,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       previewHeight = size.getHeight();
 
       int sensorOrientation = rotation - getScreenOrientation();
-      LOGGER.i("Camera orientation relative to screen canvas: %d", sensorOrientation);
 
-      LOGGER.i("Initializing at size %dx%d", previewWidth, previewHeight);
       rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Config.ARGB_8888);
       croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Config.ARGB_8888);
 
@@ -201,9 +194,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     @Override
     protected void processImage () {
-      ++timestamp;
-      final long currTimestamp = timestamp;
-      trackingOverlay.postInvalidate();
+        trackingOverlay.postInvalidate();
 
       // No mutex needed as this method is not reentrant.
       if (computingDetection) {
@@ -211,7 +202,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         return;
       }
       computingDetection = true;
-      LOGGER.i("Preparing image " + currTimestamp + " for detection in bg thread.");
 
       rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
 
@@ -227,22 +217,20 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       runInBackground(
               () -> {
 
-                LOGGER.i("Running detection on image " + currTimestamp);
                 final long startTime = SystemClock.uptimeMillis();
                 List<Recognition> results = detector.recognizeImage(croppedBitmap);
 
 
                 cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
-                  final Canvas canvas1 = new Canvas(cropCopyBitmap);
-                  final Paint paint = new Paint();
-                  paint.setColor(Color.RED);
-                  paint.setStyle(Paint.Style.STROKE);
-                  paint.setStrokeWidth(2.0f);
+                final Canvas canvas1 = new Canvas(cropCopyBitmap);
+                final Paint paint = new Paint();
+                paint.setColor(Color.RED);
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(2.0f);
 
                 float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
 
-                  final List<Recognition> mappedRecognitions =
-                        new ArrayList<>();
+                final List<Recognition> mappedRecognitions = new ArrayList<>();
 
                 int cResults = 0;
                 for (Recognition result : results) {
@@ -266,7 +254,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 }
                 lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
-                tracker.trackResults(mappedRecognitions, currTimestamp);
+                tracker.trackResults(mappedRecognitions);
                 trackingOverlay.postInvalidate();
 
                 computingDetection = false;
