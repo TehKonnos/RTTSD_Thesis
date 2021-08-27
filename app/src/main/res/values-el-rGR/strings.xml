@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RTTSD Thesis</string>
+    <string name="tfe_od_app_name" translation_description="Street Sign Recognition [CHAR_LIMIT=40]">RTTSD Thesis</string>
+    <string name="tfe_od_camera_error" translation_description="Error regarding camera support[CHAR_LIMIT=40]">Η συσκευή αυτή δεν υποστηρίζει Camera2 API.</string>
+    <string name="please_enable_gps">Παρακαλώ ενεργοποιήστε το GPS</string>
+    <string name="gps_disabled">Το GPS είναι απενεργοποιημένο</string>
+    <string name="gps_fix">Διορθώνουμε το GPS..</string>
+    <string name="currentSpeedTxt">Καλώς ήρθατε στην RTTSD Thesis</string>
+    <string name="current_traffic_sign">Τρέχων σήμα κυκλοφορίας</string>
+    <string name="frame">Πλαίσιο</string>
+    <string name="crop">Περικοπή</string>
+    <string name="inference_time">Χρόνος συμπεράσματος</string>
+    <string name="threads">Νήματα</string>
+    <string name="signs">Πινακίδες</string>
+    <string name="confidence">Εμπιστοσύνη</string>
+    <string name="voice_notifications">Φωνητικές ειδοποιήσεις</string>
+</resources>

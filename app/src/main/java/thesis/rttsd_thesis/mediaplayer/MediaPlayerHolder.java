@@ -3,7 +3,6 @@ package thesis.rttsd_thesis.mediaplayer;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.util.Log;
 
 import androidx.annotation.IdRes;
 

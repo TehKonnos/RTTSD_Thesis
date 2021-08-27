@@ -39,7 +39,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="Frame"
+            android:text="@string/frame"
             android:textColor="@android:color/black" />
 
         <TextView
@@ -62,7 +62,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="Crop"
+            android:text="@string/crop"
             android:textColor="@android:color/black" />
 
         <TextView
@@ -87,7 +87,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="Inference Time"
+            android:text="@string/inference_time"
             android:textColor="@android:color/black" />
 
         <TextView
@@ -117,7 +117,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="Threads"
+            android:text="@string/threads"
             android:textColor="@android:color/black" />
 
         <LinearLayout
@@ -163,7 +163,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="Signs"
+            android:text="@string/signs"
             android:textColor="@android:color/black" />
 
         <LinearLayout
@@ -209,7 +209,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="Confidence"
+            android:text="@string/confidence"
             android:textColor="@android:color/black" />
 
         <SeekBar
@@ -249,7 +249,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="Voice Notifications"
+            android:text="@string/voice_notifications"
             android:textColor="@android:color/black" />
 
         <androidx.appcompat.widget.SwitchCompat

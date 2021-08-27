@@ -81,9 +81,7 @@ public abstract class CameraActivity extends AppCompatActivity
         CompoundButton.OnCheckedChangeListener,
         View.OnClickListener {
   private static final Logger LOGGER = new Logger();
-
   private static final int PERMISSIONS_REQUEST = 1;
-
   private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
   protected int previewWidth = 0;
   protected int previewHeight = 0;
@@ -107,17 +105,16 @@ public abstract class CameraActivity extends AppCompatActivity
   private ImageView plusImageView, minusImageView, plus2ImageView, minus2ImageView;
   private TextView threadsTextView,signsTextView;
 
-  private Boolean notificationSpeed = true;
+  private static Boolean notificationSpeed = true;
   private TextView currentSpeed;
   private SwitchCompat notification;
-
-  private MediaPlayerHolder mediaPlayerHolder;
 
   private LocationManager mLocationManager;
   private int speedLimit = 0;
 
   private CompositeDisposable compositeDisposable;
   Data data;
+  private MediaPlayerHolder mediaPlayerHolder;
 
   @SuppressLint("CheckResult")
   @Override
@@ -128,7 +125,7 @@ public abstract class CameraActivity extends AppCompatActivity
 
     setContentView(R.layout.tfe_od_activity_camera);
 
-    Observable.interval(10L, TimeUnit.SECONDS)
+    Observable.interval(5L, TimeUnit.SECONDS)
             .timeInterval()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(v -> {
@@ -157,6 +154,7 @@ public abstract class CameraActivity extends AppCompatActivity
     bottomSheetArrowImageView = findViewById(R.id.bottom_sheet_arrow);
     notification = findViewById(R.id.notification_switch);
 
+    mediaPlayerHolder = new MediaPlayerHolder(getApplicationContext());
 
     ViewTreeObserver vto = gestureLayout.getViewTreeObserver();
     vto.addOnGlobalLayoutListener(
@@ -164,7 +162,7 @@ public abstract class CameraActivity extends AppCompatActivity
               @Override
               public void onGlobalLayout() {
                 gestureLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                //                int width = bottomSheetLayout.getMeasuredWidth();
+                //int width = bottomSheetLayout.getMeasuredWidth();
                 int height = gestureLayout.getMeasuredHeight();
 
                 sheetBehavior.setPeekHeight(height);
@@ -178,6 +176,8 @@ public abstract class CameraActivity extends AppCompatActivity
               public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 switch (newState) {
                   case BottomSheetBehavior.STATE_HIDDEN:
+                  case BottomSheetBehavior.STATE_DRAGGING:
+                  case BottomSheetBehavior.STATE_HALF_EXPANDED:
                     break;
                   case BottomSheetBehavior.STATE_EXPANDED: {
                     bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_down);
@@ -187,12 +187,8 @@ public abstract class CameraActivity extends AppCompatActivity
                     bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_up);
                   }
                   break;
-                  case BottomSheetBehavior.STATE_DRAGGING:
-                    break;
                   case BottomSheetBehavior.STATE_SETTLING:
                     bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_up);
-                    break;
-                  case BottomSheetBehavior.STATE_HALF_EXPANDED:
                     break;
                 }
               }
@@ -267,7 +263,7 @@ public abstract class CameraActivity extends AppCompatActivity
         setNotificationSpeed(false);
         mediaPlayerHolder.loadMedia(R.raw.speed_limit_exceeded);
       }
-      currentSpeed.setText("Current Speed: "+(int) speed+" km/h");
+      currentSpeed.setText("Τρέχων ταχύτητα: "+ (int) speed+" χλμ");
     }
   }
 
@@ -276,13 +272,6 @@ public abstract class CameraActivity extends AppCompatActivity
     return rgbBytes;
   }
 
-  protected int getLuminanceStride() {
-    return yRowStride;
-  }
-
-  protected byte[] getLuminance() {
-    return yuvBytes[0];
-  }
 
   /**
    * Callback for android.hardware.Camera API
@@ -415,8 +404,6 @@ public abstract class CameraActivity extends AppCompatActivity
 
   @Override
   public synchronized void onPause() {
-    LOGGER.d("onPause " + this);
-
     handlerThread.quitSafely();
     try {
       handlerThread.join();
@@ -425,19 +412,16 @@ public abstract class CameraActivity extends AppCompatActivity
     } catch (final InterruptedException e) {
       LOGGER.e(e, "Exception!");
     }
-
     super.onPause();
   }
 
   @Override
   public synchronized void onStop() {
-    LOGGER.d("onStop " + this);
     super.onStop();
   }
 
   @Override
   public synchronized void onDestroy() {
-    LOGGER.d("onDestroy " + this);
     super.onDestroy();
     if (compositeDisposable != null) {
       compositeDisposable.dispose();
@@ -492,8 +476,7 @@ public abstract class CameraActivity extends AppCompatActivity
   }
 
   // Returns true if the device supports the required hardware level, or better.
-  private boolean isHardwareLevelSupported(
-          CameraCharacteristics characteristics) {
+  private boolean isHardwareLevelSupported(CameraCharacteristics characteristics) {
     int deviceLevel = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
     if (deviceLevel == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
       return false;
@@ -540,7 +523,6 @@ public abstract class CameraActivity extends AppCompatActivity
 
   protected void setFragment() {
     String cameraId = chooseCamera();
-
     Fragment fragment;
     if (useCamera2API) {
       CameraConnectionFragment camera2Fragment =
@@ -660,8 +642,6 @@ public abstract class CameraActivity extends AppCompatActivity
 
   protected abstract void setNumThreads(int numThreads);
 
-  protected abstract void setUseNNAPI(boolean isChecked);
-
   @SuppressLint("MissingPermission")
   private void setupLocation() {
     mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -733,7 +713,7 @@ public abstract class CameraActivity extends AppCompatActivity
     };
   }
 
-  public Boolean getNotificationSpeed() {
+  public static Boolean getNotificationSpeed() {
     return notificationSpeed;
   }
 
@@ -743,5 +723,9 @@ public abstract class CameraActivity extends AppCompatActivity
 
   public void setSpeedLimit(int speedLimit) {
     this.speedLimit = speedLimit;
+  }
+
+  public MediaPlayerHolder getMediaPlayerHolder() {
+    return mediaPlayerHolder;
   }
 }

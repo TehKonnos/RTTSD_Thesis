@@ -25,7 +25,6 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Typeface;
-import android.location.Location;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -37,19 +36,14 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
-
 import org.tensorflow.lite.support.image.TensorImage;
 import org.tensorflow.lite.task.vision.classifier.Classifications;
 import org.tensorflow.lite.task.vision.classifier.ImageClassifier;
-
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-
-import thesis.rttsd_thesis.Detection.Classifier;
 import thesis.rttsd_thesis.Detection.Classifier.Recognition;
 import thesis.rttsd_thesis.Detection.YoloV5Classifier;
 import thesis.rttsd_thesis.customview.OverlayView;
@@ -74,7 +68,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private static final boolean TF_OD_API_IS_QUANTIZED = true;
   private static final String TF_OD_API_MODEL_FILE = "sign_recognitionQ.tflite";
   public static final String TF_OD_API_LABELS_FILE = "sign_recognition.txt";
-  private static final DetectorMode MODE = DetectorMode.TF_OD_API;
   // Minimum detection confidence to track a detection.
   public static float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
   private static final boolean MAINTAIN_ASPECT = true;
@@ -85,11 +78,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   //For Classification
   public static float CLASSIFICATION_THRESHOLD = 0.6f;
   public static String MODEL_FILENAME = "model82Q.tflite";
+  private static SwitchCompat notification;
+  private MediaPlayerHolder mediaPlayerHolder;
 
   private int maximumResults = 3;
   OverlayView trackingOverlay;
-
-  private Integer sensorOrientation;
 
   private YoloV5Classifier detector;
   private long lastProcessingTimeMs;
@@ -106,12 +99,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   private MultiBoxTracker tracker;
 
-  private SwitchCompat notification;
-  private BorderedText borderedText;
-  private MediaPlayerHolder mediaPlayerHolder;
-
-
-  protected void onSaveInstanceState(Bundle outState) {
+  protected void onSaveInstanceState(@NonNull Bundle outState) {
     super.onSaveInstanceState(outState);
   }
 
@@ -124,7 +112,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     TextView confidence = findViewById(R.id.confidence_value);
     confidence.setText(String.format("%.2f", CLASSIFICATION_THRESHOLD));
 
-    mediaPlayerHolder = new MediaPlayerHolder(getApplicationContext());
+    mediaPlayerHolder = getMediaPlayerHolder();
+
 
     notification = findViewById(R.id.notification_switch);
     notification.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -158,7 +147,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       final float textSizePx =
               TypedValue.applyDimension(
                       TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DIP, getResources().getDisplayMetrics());
-      borderedText = new BorderedText(textSizePx);
+        BorderedText borderedText = new BorderedText(textSizePx);
       borderedText.setTypeface(Typeface.MONOSPACE);
 
       tracker = new MultiBoxTracker(this);
@@ -185,7 +174,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       previewWidth = size.getWidth();
       previewHeight = size.getHeight();
 
-      sensorOrientation = rotation - getScreenOrientation();
+      int sensorOrientation = rotation - getScreenOrientation();
       LOGGER.i("Camera orientation relative to screen canvas: %d", sensorOrientation);
 
       LOGGER.i("Initializing at size %dx%d", previewWidth, previewHeight);
@@ -201,15 +190,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       cropToFrameTransform = new Matrix();
       frameToCropTransform.invert(cropToFrameTransform);
 
-      trackingOverlay = (OverlayView) findViewById(R.id.tracking_overlay);
+      trackingOverlay = findViewById(R.id.tracking_overlay);
       trackingOverlay.addCallback(
-              new OverlayView.DrawCallback() {
-                @Override
-                public void drawCallback(final Canvas canvas) {
-                  tracker.draw(canvas);
-                  if (isDebug()) {
-                    tracker.drawDebug(canvas);
-                  }
+              canvas -> {
+                tracker.draw(canvas);
+                if (isDebug()) {
+                  tracker.drawDebug(canvas);
                 }
               });
 
@@ -242,69 +228,99 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       }
 
       runInBackground(
-              new Runnable() {
-                @Override
-                public void run() {
+              () -> {
 
-                  LOGGER.i("Running detection on image " + currTimestamp);
-                  final long startTime = SystemClock.uptimeMillis();
-                  List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
+                LOGGER.i("Running detection on image " + currTimestamp);
+                final long startTime = SystemClock.uptimeMillis();
+                List<Recognition> results = detector.recognizeImage(croppedBitmap);
 
 
-                  cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
-                    final Canvas canvas = new Canvas(cropCopyBitmap);
-                    final Paint paint = new Paint();
-                    paint.setColor(Color.RED);
-                    paint.setStyle(Paint.Style.STROKE);
-                    paint.setStrokeWidth(2.0f);
+                cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
+                  final Canvas canvas1 = new Canvas(cropCopyBitmap);
+                  final Paint paint = new Paint();
+                  paint.setColor(Color.RED);
+                  paint.setStyle(Paint.Style.STROKE);
+                  paint.setStrokeWidth(2.0f);
 
-                  float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-                  switch (MODE) {
-                    case TF_OD_API:
-                      minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-                      break;
-                  }
+                float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
 
                   final List<Recognition> mappedRecognitions =
-                          new ArrayList<>();
+                        new ArrayList<>();
 
-                  int cResults = 0;
-                  for (Recognition result : results) {
-                    RectF location = result.getLocation();
-                    if (location != null && result.getConfidence() >= minimumConfidence) {
-                      result = classify(result);
+                int cResults = 0;
+                for (Recognition result : results) {
+                  RectF location = result.getLocation();
+                  if (location != null && result.getConfidence() >= minimumConfidence) {
+                      classify(result);
 
                       cResults++;
-                      if (cResults > maximumResults) break;
-                      canvas.drawRect(location, paint);
+                    if (cResults > maximumResults) break;
+                    canvas1.drawRect(location, paint);
 
-                      cropToFrameTransform.mapRect(location);
+                    cropToFrameTransform.mapRect(location);
 
-                      result.setLocation(location);
-                      mappedRecognitions.add(result);
+                    result.setLocation(location);
+                    mappedRecognitions.add(result);
 
-                      if(getNotificationSpeed() && notification.isChecked()) playSound(result.getTitle());
+                    checkSpeedLimit(result.getTitle().trim());
+                    if(getNotificationSpeed() && notification.isChecked()) playSound(result.getTitle());
 
-                    }
                   }
-                  lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
-
-                  tracker.trackResults(mappedRecognitions, currTimestamp);
-                  trackingOverlay.postInvalidate();
-
-                  computingDetection = false;
-
-                  runOnUiThread(
-                          new Runnable() {
-                            @Override
-                            public void run() {
-                              showFrameInfo(previewWidth + "x" + previewHeight);
-                              showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
-                              showInference(lastProcessingTimeMs + "ms");
-                            }
-                          });
                 }
+                lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+
+                tracker.trackResults(mappedRecognitions, currTimestamp);
+                trackingOverlay.postInvalidate();
+
+                computingDetection = false;
+
+                runOnUiThread(
+                        () -> {
+                          showFrameInfo(previewWidth + "x" + previewHeight);
+                          showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
+                          showInference(lastProcessingTimeMs + "ms");
+                        });
               });
+    }
+
+    private void checkSpeedLimit(String title){
+      switch (title){
+          case "Max speed limit 20km/h":
+              setSpeedLimit(20);
+              break;
+          case "Max speed limit 30km/h":
+              setSpeedLimit(30);
+              break;
+          case "Max speed limit 40km/h":
+              setSpeedLimit(40);
+              break;
+          case "Max speed limit 50km/h":
+              setSpeedLimit(50);
+              break;
+          case "Max speed limit 60km/h":
+              setSpeedLimit(60);
+              break;
+          case "Max speed limit 70km/h":
+              setSpeedLimit(70);
+              break;
+          case "Max speed limit 80km/h":
+              setSpeedLimit(80);
+              break;
+          case "Max speed limit 90km/h":
+              setSpeedLimit(90);
+              break;
+          case "Max speed limit 100km/h":
+              setSpeedLimit(100);
+              break;
+          case "Max speed limit 110km/h":
+              setSpeedLimit(110);
+              break;
+          case "Max speed limit 120km/h":
+              setSpeedLimit(120);
+              break;
+          default:
+              break;
+      }
     }
 
     @SuppressLint("ResourceType")
@@ -330,35 +346,27 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 mediaPlayerHolder.loadMedia(R.raw.passing_right_mandatory_9);
                 break;
             case "Max speed limit 20km/h":
-                setSpeedLimit(20);
                 mediaPlayerHolder.loadMedia(R.raw.maxsl_20kmh_10);
                 break;
             case "Max speed limit 30km/h":
-                setSpeedLimit(30);
                 mediaPlayerHolder.loadMedia(R.raw.maxsl_30kmh_11);
                 break;
             case "Max speed limit 40km/h":
-                setSpeedLimit(40);
                 mediaPlayerHolder.loadMedia(R.raw.maxsl_40kmh_12);
                 break;
             case "Max speed limit 50km/h":
-                setSpeedLimit(50);
                 mediaPlayerHolder.loadMedia(R.raw.maxsl_50kmh_13);
                 break;
             case "Max speed limit 60km/h":
-                setSpeedLimit(60);
                 mediaPlayerHolder.loadMedia(R.raw.maxsl_60kmh_14);
                 break;
             case "Max speed limit 70km/h":
-                setSpeedLimit(70);
                 mediaPlayerHolder.loadMedia(R.raw.maxsl_70kmh_15);
                 break;
             case "Max speed limit 80km/h":
-                setSpeedLimit(80);
                 mediaPlayerHolder.loadMedia(R.raw.maxsl_80kmh_16);
                 break;
             case "Max speed limit 90km/h":
-                setSpeedLimit(90);
                 mediaPlayerHolder.loadMedia(R.raw.maxsl_90kmh_17);
                 break;
             case "Max speed limit 100km/h":
@@ -497,13 +505,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 mediaPlayerHolder.loadMedia(R.raw.uneven_road_76);
                 break;
             default:
-                setNotificationSpeed(true);
                 break;
         }
     }
 
     //This method gets a recognised box of sign and returns the classified sign.
-    private Recognition classify (Recognition result){
+    private void classify (Recognition result){
         Matrix matrix = new Matrix();
         matrix.postRotate(0);
 
@@ -536,23 +543,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 result.setConfidence(results2.get(0).getCategories().get(0).getScore());
             } catch (Exception e) {
               Log.e("SLClassifier error:", e.getMessage(),e);
-              result.setTitle("Sign");
+              result.setTitle("Σήμα");
             }
       }
-      return result;
-    }
-
-
-    private boolean isTimeDifferenceValid (Date date1, Date date2){
-      long milliseconds = date1.getTime() - date2.getTime();
-      Log.i("sign", "isTimeDifferenceValid " + ((milliseconds / (1000)) > 30));
-      return (int) (milliseconds / (1000)) > 30;
-    }
-
-    private boolean isLocationDifferenceValid (Location location1, Location location2){
-      if (location1 == null || location2 == null)
-        return false;
-      return location1.distanceTo(location2) > 50;
     }
 
     @Override
@@ -566,34 +559,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     }
 
     @Override
-    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
-    }
-
-    // Which detection model to use: by default uses Tensorflow Object Detection API frozen
-    // checkpoints.
-    private enum DetectorMode {
-      TF_OD_API
-    }
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {}
 
     @Override
-    protected void setUseNNAPI ( final boolean isChecked){
-      runInBackground(
-              () -> {
-                try {
-                  detector.setUseNNAPI(isChecked);
-                } catch (UnsupportedOperationException e) {
-                  LOGGER.e(e, "Failed to set \"Use NNAPI\".");
-                  runOnUiThread(
-                          () -> {
-                            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-                          });
-                }
-              });
-    }
-
-    @Override
-    protected void setNumThreads ( final int numThreads){
+    protected void setNumThreads (final int numThreads){
       runInBackground(() -> detector.setNumThreads(numThreads));
     }
     public void setMaximumResults(int maximumResults) {

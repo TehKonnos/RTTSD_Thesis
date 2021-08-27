@@ -7,5 +7,12 @@
     <string name="gps_fix">Waiting for GPS fix…</string>
     <string name="currentSpeedTxt">Welcome to RTTSD Thesis</string>
     <string name="current_traffic_sign">Current traffic sign</string>
+    <string name="frame">Frame</string>
+    <string name="crop">Crop</string>
+    <string name="inference_time">Inference Time</string>
+    <string name="threads">Threads</string>
+    <string name="signs">Signs</string>
+    <string name="confidence">Confidence</string>
+    <string name="voice_notifications">Voice Notifications</string>
 
 </resources>
