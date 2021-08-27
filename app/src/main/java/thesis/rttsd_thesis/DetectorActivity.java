@@ -50,7 +50,6 @@ import thesis.rttsd_thesis.customview.OverlayView;
 import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.env.Logger;
-import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
 import thesis.rttsd_thesis.tracking.MultiBoxTracker;
 
 import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
@@ -79,7 +78,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   public static float CLASSIFICATION_THRESHOLD = 0.6f;
   public static String MODEL_FILENAME = "model82Q.tflite";
   private static SwitchCompat notification;
-  private MediaPlayerHolder mediaPlayerHolder;
 
   private int maximumResults = 3;
   OverlayView trackingOverlay;
@@ -112,7 +110,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     TextView confidence = findViewById(R.id.confidence_value);
     confidence.setText(String.format("%.2f", CLASSIFICATION_THRESHOLD));
 
-    mediaPlayerHolder = getMediaPlayerHolder();
 
 
     notification = findViewById(R.id.notification_switch);

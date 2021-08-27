@@ -85,28 +85,24 @@ public abstract class CameraActivity extends AppCompatActivity
   private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
   protected int previewWidth = 0;
   protected int previewHeight = 0;
-  private boolean debug = false;
   private Handler handler;
   private HandlerThread handlerThread;
   private boolean useCamera2API;
   private boolean isProcessingFrame = false;
-  private byte[][] yuvBytes = new byte[3][];
+  private final byte[][] yuvBytes = new byte[3][];
   private int[] rgbBytes = null;
   private int yRowStride;
   private Runnable postInferenceCallback;
   private Runnable imageConverter;
 
-  private LinearLayout bottomSheetLayout;
   private LinearLayout gestureLayout;
   private BottomSheetBehavior<LinearLayout> sheetBehavior;
 
   protected TextView frameValueTextView, cropValueTextView, inferenceTimeTextView;
   protected ImageView bottomSheetArrowImageView;
-  private ImageView plusImageView, minusImageView, plus2ImageView, minus2ImageView;
   private TextView threadsTextView,signsTextView;
 
   private static Boolean notificationSpeed = true;
-  private TextView currentSpeed;
   private SwitchCompat notification;
 
   private LocationManager mLocationManager;
@@ -114,7 +110,7 @@ public abstract class CameraActivity extends AppCompatActivity
 
   private CompositeDisposable compositeDisposable;
   Data data;
-  private MediaPlayerHolder mediaPlayerHolder;
+  protected MediaPlayerHolder mediaPlayerHolder;
 
   @SuppressLint("CheckResult")
   @Override
@@ -128,9 +124,7 @@ public abstract class CameraActivity extends AppCompatActivity
     Observable.interval(5L, TimeUnit.SECONDS)
             .timeInterval()
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(v -> {
-              this.notificationSpeed = true;
-            });
+            .subscribe(v -> notificationSpeed = true);
 
     setCallBack();
     setupViews();
@@ -143,12 +137,12 @@ public abstract class CameraActivity extends AppCompatActivity
     }
 
     threadsTextView = findViewById(R.id.threads);
-    plusImageView = findViewById(R.id.plus);
-    minusImageView = findViewById(R.id.minus);
+    ImageView plusImageView = findViewById(R.id.plus);
+    ImageView minusImageView = findViewById(R.id.minus);
     signsTextView = findViewById(R.id.signs);
-    plus2ImageView = findViewById(R.id.plus2);
-    minus2ImageView = findViewById(R.id.minus2);
-    bottomSheetLayout = findViewById(R.id.bottom_sheet_layout);
+    ImageView plus2ImageView = findViewById(R.id.plus2);
+    ImageView minus2ImageView = findViewById(R.id.minus2);
+    LinearLayout bottomSheetLayout = findViewById(R.id.bottom_sheet_layout);
     gestureLayout = findViewById(R.id.gesture_layout);
     sheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
     bottomSheetArrowImageView = findViewById(R.id.bottom_sheet_arrow);
@@ -237,9 +231,7 @@ public abstract class CameraActivity extends AppCompatActivity
             .setNegativeButton(android.R.string.cancel, (dialog, id) -> {
               dialog.cancel();
             })
-            .setPositiveButton(android.R.string.ok, (dialog, id) -> {
-              startActivity(new Intent("android.settings.LOCATION_SOURCE_SETTINGS"));
-            });
+            .setPositiveButton(android.R.string.ok, (dialog, id) -> startActivity(new Intent("android.settings.LOCATION_SOURCE_SETTINGS")));
     AlertDialog dialog = builder.create();
     dialog.setCancelable(true);
     dialog.setOnShowListener(arg -> {
@@ -255,7 +247,7 @@ public abstract class CameraActivity extends AppCompatActivity
   @SuppressLint({"ResourceType", "DefaultLocale", "SetTextI18n"})
   private void refresh(Data data) {
     this.data = data;
-    currentSpeed = findViewById(R.id.currentSpeed);
+    TextView currentSpeed = findViewById(R.id.currentSpeed);
     if (data.getLocation().hasSpeed()) {
       double speed = data.getLocation().getSpeed() * 3.6;
 
@@ -302,20 +294,12 @@ public abstract class CameraActivity extends AppCompatActivity
     yRowStride = previewWidth;
 
     imageConverter =
-            new Runnable() {
-              @Override
-              public void run() {
-                ImageUtils.convertYUV420SPToARGB8888(bytes, previewWidth, previewHeight, rgbBytes);
-              }
-            };
+            () -> ImageUtils.convertYUV420SPToARGB8888(bytes, previewWidth, previewHeight, rgbBytes);
 
     postInferenceCallback =
-            new Runnable() {
-              @Override
-              public void run() {
-                camera.addCallbackBuffer(bytes);
-                isProcessingFrame = false;
-              }
+            () -> {
+              camera.addCallbackBuffer(bytes);
+              isProcessingFrame = false;
             };
     processImage();
   }
@@ -352,29 +336,21 @@ public abstract class CameraActivity extends AppCompatActivity
       final int uvPixelStride = planes[1].getPixelStride();
 
       imageConverter =
-              new Runnable() {
-                @Override
-                public void run() {
-                  ImageUtils.convertYUV420ToARGB8888(
-                          yuvBytes[0],
-                          yuvBytes[1],
-                          yuvBytes[2],
-                          previewWidth,
-                          previewHeight,
-                          yRowStride,
-                          uvRowStride,
-                          uvPixelStride,
-                          rgbBytes);
-                }
-              };
+              () -> ImageUtils.convertYUV420ToARGB8888(
+                      yuvBytes[0],
+                      yuvBytes[1],
+                      yuvBytes[2],
+                      previewWidth,
+                      previewHeight,
+                      yRowStride,
+                      uvRowStride,
+                      uvPixelStride,
+                      rgbBytes);
 
       postInferenceCallback =
-              new Runnable() {
-                @Override
-                public void run() {
-                  image.close();
-                  isProcessingFrame = false;
-                }
+              () -> {
+                image.close();
+                isProcessingFrame = false;
               };
 
       processImage();
@@ -437,7 +413,7 @@ public abstract class CameraActivity extends AppCompatActivity
 
   @Override
   public void onRequestPermissionsResult(
-          final int requestCode, final String[] permissions, final int[] grantResults) {
+          final int requestCode, @NonNull final String[] permissions, final int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     if (requestCode == PERMISSIONS_REQUEST) {
       if (allPermissionsGranted(grantResults)) {
@@ -527,13 +503,10 @@ public abstract class CameraActivity extends AppCompatActivity
     if (useCamera2API) {
       CameraConnectionFragment camera2Fragment =
               CameraConnectionFragment.newInstance(
-                      new CameraConnectionFragment.ConnectionCallback() {
-                        @Override
-                        public void onPreviewSizeChosen(final Size size, final int rotation) {
-                          previewHeight = size.getHeight();
-                          previewWidth = size.getWidth();
-                          CameraActivity.this.onPreviewSizeChosen(size, rotation);
-                        }
+                      (size, rotation) -> {
+                        previewHeight = size.getHeight();
+                        previewWidth = size.getWidth();
+                        CameraActivity.this.onPreviewSizeChosen(size, rotation);
                       },
                       this,
                       getLayoutId(),
@@ -562,9 +535,7 @@ public abstract class CameraActivity extends AppCompatActivity
     }
   }
 
-  public boolean isDebug() {
-    return debug;
-  }
+  public boolean isDebug() { return false; }
 
   protected void readyForNextImage() {
     if (postInferenceCallback != null) {
@@ -700,17 +671,6 @@ public abstract class CameraActivity extends AppCompatActivity
       data.setTimeStopped(timer);
     }
 
-    private GpsStatus.Listener gpsStatus = event -> {
-      switch (event) {
-        case GpsStatus.GPS_EVENT_STOPPED:
-          if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            MessageEventBus.INSTANCE.send(new EventGpsDisabled());
-          }
-          break;
-        case GpsStatus.GPS_EVENT_FIRST_FIX:
-          break;
-      }
-    };
   }
 
   public static Boolean getNotificationSpeed() {
@@ -718,14 +678,11 @@ public abstract class CameraActivity extends AppCompatActivity
   }
 
   public void setNotificationSpeed(Boolean notificationSpeed) {
-    this.notificationSpeed = notificationSpeed;
+    CameraActivity.notificationSpeed = notificationSpeed;
   }
 
   public void setSpeedLimit(int speedLimit) {
     this.speedLimit = speedLimit;
   }
 
-  public MediaPlayerHolder getMediaPlayerHolder() {
-    return mediaPlayerHolder;
-  }
 }
