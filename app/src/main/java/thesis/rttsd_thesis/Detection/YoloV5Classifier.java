@@ -19,7 +19,6 @@ import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.util.Log;
 
@@ -43,7 +42,6 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Vector;
 
-import thesis.rttsd_thesis.CameraActivity;
 import thesis.rttsd_thesis.DetectorActivity;
 
 
