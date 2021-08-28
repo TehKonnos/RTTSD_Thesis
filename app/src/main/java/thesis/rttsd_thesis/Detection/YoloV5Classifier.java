@@ -15,9 +15,11 @@ limitations under the License.
 
 package thesis.rttsd_thesis.Detection;
 
+import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.util.Log;
 
@@ -27,20 +29,22 @@ import org.tensorflow.lite.gpu.GpuDelegate;
 import org.tensorflow.lite.nnapi.NnApiDelegate;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Vector;
 
+import thesis.rttsd_thesis.CameraActivity;
 import thesis.rttsd_thesis.DetectorActivity;
-import thesis.rttsd_thesis.env.Utils;
 
 
 /**
@@ -95,7 +99,7 @@ public class YoloV5Classifier implements Classifier {
                 d.gpuDelegate = new GpuDelegate(gpu_options);
                 options.addDelegate(d.gpuDelegate);
             }
-            d.tfliteModel = Utils.loadModelFile(assetManager, modelFilename);
+            d.tfliteModel = loadModelFile(assetManager, modelFilename);
             d.tfLite = new Interpreter(d.tfliteModel, options);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -316,6 +320,8 @@ public class YoloV5Classifier implements Classifier {
     }
 
     public ArrayList<Recognition> recognizeImage(Bitmap bitmap) {
+
+        //CameraActivity.runInBackground(() -> convertBitmapToByteBuffer(bitmap));
         convertBitmapToByteBuffer(bitmap);
 
         Map<Integer, Object> outputMap = new HashMap<>();
@@ -390,6 +396,15 @@ public class YoloV5Classifier implements Classifier {
         Log.d("YoloV5Classifier", "detect end");
         //        final ArrayList<Recognition> recognitions = detections;
         return nms(detections);
+    }
+    public static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename)
+            throws IOException {
+        AssetFileDescriptor fileDescriptor = assets.openFd(modelFilename);
+        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+        FileChannel fileChannel = inputStream.getChannel();
+        long startOffset = fileDescriptor.getStartOffset();
+        long declaredLength = fileDescriptor.getDeclaredLength();
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
     }
 
 }

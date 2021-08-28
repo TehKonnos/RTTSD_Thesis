@@ -65,6 +65,7 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.mediaplayer.MediaPlayerHolder;
 import thesis.rttsd_thesis.model.bus.MessageEventBus;
@@ -73,6 +74,7 @@ import thesis.rttsd_thesis.model.bus.model.EventUpdateLocation;
 import thesis.rttsd_thesis.model.entity.Data;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static java.lang.String.*;
 
 public abstract class CameraActivity extends AppCompatActivity
         implements OnImageAvailableListener,
@@ -81,9 +83,10 @@ public abstract class CameraActivity extends AppCompatActivity
         View.OnClickListener {
   private static final int PERMISSIONS_REQUEST = 1;
   private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
+  private static Handler handler;
   protected int previewWidth = 0;
   protected int previewHeight = 0;
-  private Handler handler;
+  //private Handler handler;
   private HandlerThread handlerThread;
   private boolean useCamera2API;
   private boolean isProcessingFrame = false;
@@ -103,14 +106,12 @@ public abstract class CameraActivity extends AppCompatActivity
   private static Boolean notificationSpeed = true;
   private SwitchCompat notification;
 
-  private LocationManager mLocationManager;
   private int speedLimit = 0;
 
   private CompositeDisposable compositeDisposable;
   Data data;
   protected MediaPlayerHolder mediaPlayerHolder;
 
-  @SuppressLint("CheckResult")
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
     super.onCreate(null);
@@ -118,7 +119,7 @@ public abstract class CameraActivity extends AppCompatActivity
 
     setContentView(R.layout.tfe_od_activity_camera);
 
-    Observable.interval(5L, TimeUnit.SECONDS)
+    final Disposable subscribe = Observable.interval(5L, TimeUnit.SECONDS)
             .timeInterval()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(v -> notificationSpeed = true);
@@ -193,7 +194,6 @@ public abstract class CameraActivity extends AppCompatActivity
     cropValueTextView = findViewById(R.id.crop_info);
     inferenceTimeTextView = findViewById(R.id.inference_info);
 
-
     plusImageView.setOnClickListener(this);
     minusImageView.setOnClickListener(this);
 
@@ -202,7 +202,6 @@ public abstract class CameraActivity extends AppCompatActivity
     minus2ImageView.setOnClickListener(this);
 
   }
-
   protected abstract void setupViews();
 
   private void setCallBack() {
@@ -239,7 +238,8 @@ public abstract class CameraActivity extends AppCompatActivity
     dialog.show();
   }
 
-  @SuppressLint({"ResourceType", "DefaultLocale", "SetTextI18n"})
+
+  @SuppressLint("ResourceType")
   private void refresh(Data data) {
     this.data = data;
     TextView currentSpeed = findViewById(R.id.currentSpeed);
@@ -250,7 +250,8 @@ public abstract class CameraActivity extends AppCompatActivity
         setNotificationSpeed(false);
         mediaPlayerHolder.loadMedia(R.raw.speed_limit_exceeded);
       }
-      currentSpeed.setText("Τρέχων ταχύτητα: "+ (int) speed+" χλμ");
+      String text = getString(R.string.currentSpeedText1) +" "+ (int) speed +" "+ getString(R.string.currentSpeedText2);
+      currentSpeed.setText(text);
     }
   }
 
@@ -258,7 +259,6 @@ public abstract class CameraActivity extends AppCompatActivity
     imageConverter.run();
     return rgbBytes;
   }
-
 
   /**
    * Callback for android.hardware.Camera API
@@ -391,7 +391,7 @@ public abstract class CameraActivity extends AppCompatActivity
     }
   }
 
-  protected synchronized void runInBackground(final Runnable r) {
+  public static synchronized void runInBackground(final Runnable r) {
     if (handler != null) {
       handler.post(r);
     }
@@ -426,7 +426,6 @@ public abstract class CameraActivity extends AppCompatActivity
       return true;
     }
   }
-
 
   protected void requestPermission() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -547,28 +546,28 @@ public abstract class CameraActivity extends AppCompatActivity
       int numThreads = Integer.parseInt(threads);
       if (numThreads >= 9) return;
       numThreads++;
-      threadsTextView.setText(String.valueOf(numThreads));
+      threadsTextView.setText(valueOf(numThreads));
       setNumThreads(numThreads);
     }else if (v.getId() == R.id.minus) {
       String threads = threadsTextView.getText().toString().trim();
       int numThreads = Integer.parseInt(threads);
       if (numThreads == 1) return;
       numThreads--;
-      threadsTextView.setText(String.valueOf(numThreads));
+      threadsTextView.setText(valueOf(numThreads));
       setNumThreads(numThreads);
     }else if(v.getId() == R.id.plus2){
       String signs = signsTextView.getText().toString().trim();
       int numSigns = Integer.parseInt(signs);
       if (numSigns >= 9) return;
       numSigns++;
-      signsTextView.setText(String.valueOf(numSigns));
+      signsTextView.setText(valueOf(numSigns));
       setMaximumResults(numSigns);
     }else if(v.getId() == R.id.minus2){
       String signs = signsTextView.getText().toString().trim();
       int numSigns = Integer.parseInt(signs);
       if (numSigns == 1) return;
       numSigns--;
-      signsTextView.setText(String.valueOf(numSigns));
+      signsTextView.setText(valueOf(numSigns));
       setMaximumResults(numSigns);
     }
   }
@@ -599,7 +598,7 @@ public abstract class CameraActivity extends AppCompatActivity
 
   @SuppressLint("MissingPermission")
   private void setupLocation() {
-    mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+    LocationManager mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
     mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, locationListener);
 

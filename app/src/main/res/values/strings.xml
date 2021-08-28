@@ -14,5 +14,8 @@
     <string name="signs">Signs</string>
     <string name="confidence">Confidence</string>
     <string name="voice_notifications">Voice Notifications</string>
+    <string name="currentSpeedText2">Mps</string>
+    <string name="currentSpeedText1">Current speed: </string>
+    <string name="signTxt">Sign</string>
 
 </resources>

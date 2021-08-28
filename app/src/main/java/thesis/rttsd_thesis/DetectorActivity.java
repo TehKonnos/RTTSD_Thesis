@@ -106,8 +106,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     TextView confidence = findViewById(R.id.confidence_value);
     confidence.setText(String.format("%.2f", CLASSIFICATION_THRESHOLD));
 
-
-
     notification = findViewById(R.id.notification_switch);
     notification.setOnCheckedChangeListener((buttonView, isChecked) -> {
       if (!isChecked)
@@ -216,10 +214,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
       runInBackground(
               () -> {
-
                 final long startTime = SystemClock.uptimeMillis();
                 List<Recognition> results = detector.recognizeImage(croppedBitmap);
-
 
                 cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
                 final Canvas canvas1 = new Canvas(cropCopyBitmap);
@@ -247,8 +243,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                     result.setLocation(location);
                     mappedRecognitions.add(result);
 
-                    checkSpeedLimit(result.getTitle().trim());
-                    if(getNotificationSpeed() && notification.isChecked()) playSound(result.getTitle());
+                    runInBackground(() -> checkSpeedLimit(result.getTitle().trim()));
+                    if(getNotificationSpeed() && notification.isChecked()) runInBackground(() -> playSound(result.getTitle()));
 
                   }
                 }
@@ -355,15 +351,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 mediaPlayerHolder.loadMedia(R.raw.maxsl_90kmh_17);
                 break;
             case "Μέγιστη ταχύτητα 100km/h":
-                setSpeedLimit(100);
                 mediaPlayerHolder.loadMedia(R.raw.maxsl_100kmh_18);
                 break;
             case "Μέγιστη ταχύτητα 110km/h":
-                setSpeedLimit(110);
                 mediaPlayerHolder.loadMedia(R.raw.maxsl_110kmh_19);
                 break;
             case "Μέγιστη ταχύτητα 120km/h":
-                setSpeedLimit(120);
                 mediaPlayerHolder.loadMedia(R.raw.maxsl_120kmh_20);
                 break;
             case "Απαγορεύεται η είσοδος ποδήλατων":
@@ -528,7 +521,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 result.setConfidence(results2.get(0).getCategories().get(0).getScore());
             } catch (Exception e) {
               Log.e("SLClassifier error:", e.getMessage(),e);
-              result.setTitle("Σήμα");
+              result.setTitle(getString(R.string.signTxt));
             }
       }
     }
