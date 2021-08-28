@@ -33,7 +33,7 @@ import java.util.List;
 
 import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
-import thesis.rttsd_thesis.Detection.Classifier.Recognition;
+import thesis.rttsd_thesis.detection.Classifier.Recognition;
 
 /** A tracker that handles non-max suppression and matches existing objects to new detections. */
 public class MultiBoxTracker {

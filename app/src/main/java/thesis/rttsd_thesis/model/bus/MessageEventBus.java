@@ -1,7 +1,5 @@
 package thesis.rttsd_thesis.model.bus;
 
-import android.util.Log;
-
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
 
