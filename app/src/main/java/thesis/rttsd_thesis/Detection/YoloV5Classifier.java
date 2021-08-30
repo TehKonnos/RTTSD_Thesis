@@ -38,6 +38,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Vector;
@@ -317,7 +318,7 @@ public class YoloV5Classifier implements Classifier {
         }
     }
 
-    public ArrayList<Recognition> recognizeImage(Bitmap bitmap) {
+    public List<thesis.rttsd_thesis.detection.Classifier.Recognition> recognizeImage(Bitmap bitmap) {
 
         //CameraActivity.runInBackground(() -> convertBitmapToByteBuffer(bitmap));
         convertBitmapToByteBuffer(bitmap);
