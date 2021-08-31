@@ -106,7 +106,7 @@ public abstract class CameraActivity extends AppCompatActivity
   private static Boolean notificationSpeed = true;
   private SwitchCompat notification;
 
-  private int speedLimit = 0;
+  private int speedLimit = 999;
 
   private CompositeDisposable compositeDisposable;
   Data data;
