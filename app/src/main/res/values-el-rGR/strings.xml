@@ -15,7 +15,7 @@
     <string name="signs">Πινακίδες</string>
     <string name="confidence">Εμπιστοσύνη</string>
     <string name="voice_notifications">Φωνητικές ειδοποιήσεις</string>
-    <string name="currentSpeedText1">Τρέχων ταχύτητα: </string>
+    <string name="currentSpeedText1">Τρέχουσα ταχύτητα: </string>
     <string name="currentSpeedText2"> Χλμ</string>
     <string name="signTxt">Σήμα</string>
 </resources>

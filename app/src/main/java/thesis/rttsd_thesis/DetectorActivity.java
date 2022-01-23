@@ -60,26 +60,27 @@ import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
  */
 public class DetectorActivity extends CameraActivity implements OnImageAvailableListener {
 
-  // Configuration values for the prepackaged SSD model.
+  // Variables for Object Detection
   private static final int TF_OD_API_INPUT_SIZE = 640;
   private static final boolean TF_OD_API_IS_QUANTIZED = true;
   private static final String TF_OD_API_MODEL_FILE = "sign_recognitionQ.tflite";
   public static final String TF_OD_API_LABELS_FILE = "sign_recognition.txt";
-  // Minimum detection confidence to track a detection.
   public static float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
+  private int maximumResults = 3;
+
+  // Variables for user's camera preview
   private static final boolean MAINTAIN_ASPECT = true;
   private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
   private static final boolean SAVE_PREVIEW_BITMAP = false;
   private static final float TEXT_SIZE_DIP = 10;
 
-  //For Classification
+  //Variables for Classifier
   public static float CLASSIFICATION_THRESHOLD = 0.6f;
   public static String MODEL_FILENAME = "model82Q.tflite";
   private static SwitchCompat notification;
 
-  private int maximumResults = 3;
-  OverlayView trackingOverlay;
 
+  public OverlayView trackingOverlay;
   private YoloV5Classifier detector;
   private long lastProcessingTimeMs;
   private Bitmap rgbFrameBitmap = null;

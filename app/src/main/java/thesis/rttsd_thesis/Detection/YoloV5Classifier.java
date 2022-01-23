@@ -19,13 +19,11 @@ import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
-import android.os.Build;
 import android.util.Log;
 
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.Tensor;
 import org.tensorflow.lite.gpu.GpuDelegate;
-import org.tensorflow.lite.nnapi.NnApiDelegate;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -66,37 +64,22 @@ public class YoloV5Classifier implements Classifier {
         final YoloV5Classifier d = new YoloV5Classifier();
         InputStream labelsInput = assetManager.open(labelFilename);
         BufferedReader br = new BufferedReader(new InputStreamReader(labelsInput));
-        String line;
-        while ((line = br.readLine()) != null) {
-            d.labels.add(line);
+
+        while (br.readLine() != null) {
+            d.labels.add(br.readLine());
         }
         br.close();
 
         try {
             Interpreter.Options options = (new Interpreter.Options());
             options.setNumThreads(NUM_THREADS);
-            boolean isNNAPI = false;
-            if (isNNAPI) {
-                d.nnapiDelegate = null;
-                // Initialize interpreter with NNAPI delegate for Android Pie or above
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    d.nnapiDelegate = new NnApiDelegate();
-                    options.addDelegate(d.nnapiDelegate);
-                    options.setNumThreads(NUM_THREADS);
-                    options.setUseNNAPI(false);
-                    options.setAllowFp16PrecisionForFp32(true);
-                    options.setAllowBufferHandleOutput(true);
-                    options.setUseNNAPI(true);
-                }
-            }
-            boolean isGPU = true;
-            if (isGPU) {
-                GpuDelegate.Options gpu_options = new GpuDelegate.Options();
-                gpu_options.setPrecisionLossAllowed(true); // It seems that the default is true
-                gpu_options.setInferencePreference(GpuDelegate.Options.INFERENCE_PREFERENCE_SUSTAINED_SPEED);
-                d.gpuDelegate = new GpuDelegate(gpu_options);
-                options.addDelegate(d.gpuDelegate);
-            }
+
+            GpuDelegate.Options gpu_options = new GpuDelegate.Options();
+            gpu_options.setPrecisionLossAllowed(true); // It seems that the default is true
+            gpu_options.setInferencePreference(GpuDelegate.Options.INFERENCE_PREFERENCE_SUSTAINED_SPEED);
+            d.gpuDelegate = new GpuDelegate(gpu_options);
+            options.addDelegate(d.gpuDelegate);
+
             d.tfliteModel = loadModelFile(assetManager, modelFilename);
             d.tfLite = new Interpreter(d.tfliteModel, options);
         } catch (Exception e) {
@@ -112,7 +95,7 @@ public class YoloV5Classifier implements Classifier {
             numBytesPerChannel = 4; // Floating point
         }
         d.INPUT_SIZE = inputSize;
-        d.imgData = ByteBuffer.allocateDirect(1 * d.INPUT_SIZE * d.INPUT_SIZE * 3 * numBytesPerChannel);
+        d.imgData = ByteBuffer.allocateDirect(d.INPUT_SIZE * d.INPUT_SIZE * 3 * numBytesPerChannel);
         d.imgData.order(ByteOrder.nativeOrder());
         d.intValues = new int[d.INPUT_SIZE * d.INPUT_SIZE];
 
@@ -138,41 +121,11 @@ public class YoloV5Classifier implements Classifier {
     public int getInputSize() {
         return INPUT_SIZE;
     }
-    @Override
-    public void enableStatLogging(final boolean logStats) {
-    }
-
-    @Override
-    public String getStatString() {
-        return "";
-    }
-
-    @Override
-    public void close() {
-        tfLite.close();
-        tfLite = null;
-        if (gpuDelegate != null) {
-            gpuDelegate.close();
-            gpuDelegate = null;
-        }
-        if (nnapiDelegate != null) {
-            nnapiDelegate.close();
-            nnapiDelegate = null;
-        }
-        tfliteModel = null;
-    }
 
     public void setNumThreads(int num_threads) {
         if (tfLite != null) tfLite.setNumThreads(num_threads);
     }
 
-    @Override
-    public void setUseNNAPI(boolean isChecked) {
-//        if (tfLite != null) tfLite.setUseNNAPI(isChecked);
-    }
-
-
-    @Override
     public float getObjThresh() {
         return DetectorActivity.MINIMUM_CONFIDENCE_TF_OD_API;
     }
@@ -180,9 +133,7 @@ public class YoloV5Classifier implements Classifier {
     //config yolo
     private int INPUT_SIZE = -1;
 
-
     private  int output_box;
-
 
     // Number of threads in the java app
     private static final int NUM_THREADS = 4;
@@ -191,14 +142,10 @@ public class YoloV5Classifier implements Classifier {
 
     /** holds a gpu delegate */
     GpuDelegate gpuDelegate = null;
-    /** holds an nnapi delegate */
-    NnApiDelegate nnapiDelegate = null;
+
 
     /** The loaded TensorFlow Lite model. */
     private MappedByteBuffer tfliteModel;
-
-    /** Options for configuring the Interpreter. */
-    private final Interpreter.Options tfliteOptions = new Interpreter.Options();
 
     // Config values.
 

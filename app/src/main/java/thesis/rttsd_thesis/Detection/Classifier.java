@@ -15,8 +15,11 @@ limitations under the License.
 
 package thesis.rttsd_thesis.detection;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
+
+import androidx.annotation.NonNull;
 
 import java.util.List;
 
@@ -26,22 +29,12 @@ import java.util.List;
 public interface Classifier {
     List<Recognition> recognizeImage(Bitmap bitmap);
 
-    void enableStatLogging(final boolean debug);
-
-    String getStatString();
-
-    void close();
-
     void setNumThreads(int num_threads);
-
-    void setUseNNAPI(boolean isChecked);
-
-    abstract float getObjThresh();
 
     /**
      * An immutable result returned by a Classifier describing what was recognized.
      */
-    public class Recognition {
+    class Recognition {
         /**
          * A unique identifier for what has been recognized. Specific to the class, not the instance of
          * the object.
@@ -109,10 +102,8 @@ public interface Classifier {
 
         public void setTitle(String title){this.title = title;}
 
-        public void setDetectedClass(int detectedClass) {
-            this.detectedClass = detectedClass;
-        }
-
+        @NonNull
+        @SuppressLint("DefaultLocale")
         @Override
         public String toString() {
             String resultString = "";
