@@ -51,8 +51,6 @@ import thesis.rttsd_thesis.env.BorderedText;
 import thesis.rttsd_thesis.env.ImageUtils;
 import thesis.rttsd_thesis.tracking.MultiBoxTracker;
 
-import static thesis.rttsd_thesis.ImageUtils.prepareImageForClassification;
-
 
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
@@ -78,6 +76,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   public static float CLASSIFICATION_THRESHOLD = 0.6f;
   public static String MODEL_FILENAME = "model82Q.tflite";
   private static SwitchCompat notification;
+  public static final int INPUT_IMG_SIZE_WIDTH = 64;
+  public static final int INPUT_IMG_SIZE_HEIGHT = 64;
 
 
   public OverlayView trackingOverlay;
@@ -525,6 +525,18 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               result.setTitle(getString(R.string.signTxt));
             }
       }
+    }
+
+    public static Bitmap prepareImageForClassification(Bitmap bitmap) {
+        Paint paint = new Paint();
+        Bitmap finalBitmap = Bitmap.createScaledBitmap(
+                bitmap,
+                INPUT_IMG_SIZE_WIDTH,
+                INPUT_IMG_SIZE_HEIGHT,
+                false);
+        Canvas canvas = new Canvas(finalBitmap);
+        canvas.drawBitmap(finalBitmap, 0, 0, paint);
+        return finalBitmap;
     }
 
     @Override

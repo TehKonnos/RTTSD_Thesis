@@ -649,11 +649,6 @@ public abstract class CameraActivity extends AppCompatActivity
       return ("Return object when task is finished");
     }
 
-    @Override
-    protected void onPostExecute(String message) {
-      data.setTimeStopped(timer);
-    }
-
   }
 
   public static Boolean getNotificationSpeed() {
