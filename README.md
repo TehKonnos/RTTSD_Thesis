@@ -1,2 +1,2 @@
 # RTTSD_Thesis
- Our very cool thesis
+The above application is part of the thesis of Konstantinos Zacharakis & Polychronis Georgiadis on "Android Application for Traffic Sign Recognition on roads". It uses two machine learning models for the recognition and classification of traffic signs and all this is implemented through Android Studio
