@@ -20,7 +20,6 @@ import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RectF;
@@ -68,16 +67,16 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   // Variables for user's camera preview
   private static final boolean MAINTAIN_ASPECT = true;
-  private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
+  private static final Size DESIRED_PREVIEW_SIZE = new Size(0, 0);
   private static final boolean SAVE_PREVIEW_BITMAP = false;
   private static final float TEXT_SIZE_DIP = 10;
 
   //Variables for Classifier
   public static float CLASSIFICATION_THRESHOLD = 0.6f;
-  public static String MODEL_FILENAME = "model82Q.tflite";
+  public static String MODEL_FILENAME = "model82Q2.tflite";
   private static SwitchCompat notification;
-  public static final int INPUT_IMG_SIZE_WIDTH = 64;
-  public static final int INPUT_IMG_SIZE_HEIGHT = 64;
+  public static final int INPUT_IMG_SIZE_WIDTH = 32;
+  public static final int INPUT_IMG_SIZE_HEIGHT = 32;
 
 
   public OverlayView trackingOverlay;
@@ -123,7 +122,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           CLASSIFICATION_THRESHOLD = progress / 100.0F;
         confidence.setText(String.format("%.2f", CLASSIFICATION_THRESHOLD));
       }
-
       @Override
       public void onStartTrackingTouch(SeekBar seekBar) {
       }
@@ -219,11 +217,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 List<Recognition> results = detector.recognizeImage(croppedBitmap);
 
                 cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
-                final Canvas canvas1 = new Canvas(cropCopyBitmap);
-                final Paint paint = new Paint();
-                paint.setColor(Color.RED);
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(2.0f);
 
                 float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
 
@@ -237,7 +230,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                       cResults++;
                     if (cResults > maximumResults) break;
-                    canvas1.drawRect(location, paint);
 
                     cropToFrameTransform.mapRect(location);
 

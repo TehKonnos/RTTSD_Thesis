@@ -290,7 +290,7 @@ public abstract class CameraActivity extends AppCompatActivity
               camera.addCallbackBuffer(bytes);
               isProcessingFrame = false;
             };
-    processImage();
+    //processImage();
   }
 
   /**

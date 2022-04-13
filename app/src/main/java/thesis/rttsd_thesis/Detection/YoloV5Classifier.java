@@ -163,7 +163,7 @@ public class YoloV5Classifier implements Classifier {
             //1.find max confidence per class
             PriorityQueue<Recognition> pq =
                     new PriorityQueue<>(
-                            50,
+                            200,
                             (lhs, rhs) -> {
                                 // Intentionally reversed to put high confidence at the head of the queue.
                                 return Float.compare(rhs.getConfidence(), lhs.getConfidence());
@@ -314,8 +314,8 @@ public class YoloV5Classifier implements Classifier {
 
                 final float w = out[0][i][2];
                 final float h = out[0][i][3];
-                Log.d("YoloV5Classifier",
-                        Float.toString(xPos) + ',' + yPos + ',' + w + ',' + h);
+                //Log.d("YoloV5Classifier",
+                        //Float.toString(xPos) + ',' + yPos + ',' + w + ',' + h);
 
                 final RectF rect =
                         new RectF(
@@ -328,7 +328,7 @@ public class YoloV5Classifier implements Classifier {
             }
         }
 
-        Log.d("YoloV5Classifier", "detect end");
+        //Log.d("YoloV5Classifier", "detect end");
         //        final ArrayList<Recognition> recognitions = detections;
         return nms(detections);
     }
