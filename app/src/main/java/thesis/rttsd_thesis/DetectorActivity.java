@@ -73,10 +73,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   //Variables for Classifier
   public static float CLASSIFICATION_THRESHOLD = 0.6f;
-  public static String MODEL_FILENAME = "model82Q2.tflite";
+  public static String MODEL_FILENAME = "model82Q.tflite";
   private static SwitchCompat notification;
-  public static final int INPUT_IMG_SIZE_WIDTH = 32;
-  public static final int INPUT_IMG_SIZE_HEIGHT = 32;
+  public static final int INPUT_IMG_SIZE_WIDTH = 64;
+  public static final int INPUT_IMG_SIZE_HEIGHT = 64;
 
 
   public OverlayView trackingOverlay;
