@@ -92,6 +92,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private Matrix cropToFrameTransform;
 
   private MultiBoxTracker tracker;
+  private ImageView viewSign;
+
 
   protected void onSaveInstanceState(@NonNull Bundle outState) {
     super.onSaveInstanceState(outState);
@@ -104,6 +106,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   @SuppressLint("DefaultLocale")
   public void setupViews() {
     TextView confidence = findViewById(R.id.confidence_value);
+    viewSign = findViewById(R.id.signImg);
     confidence.setText(String.format("%.2f", CLASSIFICATION_THRESHOLD));
 
     notification = findViewById(R.id.notification_switch);
@@ -236,7 +239,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                     result.setLocation(location);
                     mappedRecognitions.add(result);
 
-                    runInBackground(() -> checkSpeedLimit(result.getTitle().trim()));
+                    //runInBackground(() -> checkSpeedLimit(result.getTitle().trim()));
+                      runOnUiThread(() -> {checkSpeedLimit(result.getTitle().trim());});
                     if(getNotificationSpeed() && notification.isChecked()) runInBackground(() -> playSound(result.getTitle()));
 
                   }
@@ -261,36 +265,47 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
       switch (title){
           case "Μέγιστη ταχύτητα 20km/h":
               setSpeedLimit(20);
+              viewSign.setImageResource(R.drawable.speed_sign_20);
               break;
           case "Μέγιστη ταχύτητα 30km/h":
               setSpeedLimit(30);
+              viewSign.setImageResource(R.drawable.speed_sign_30);
               break;
           case "Μέγιστη ταχύτητα 40km/h":
               setSpeedLimit(40);
+              viewSign.setImageResource(R.drawable.speed_sign_40);
               break;
           case "Μέγιστη ταχύτητα 50km/h":
               setSpeedLimit(50);
+              viewSign.setImageResource(R.drawable.speed_sign_50);
               break;
           case "Μέγιστη ταχύτητα 60km/h":
               setSpeedLimit(60);
+              viewSign.setImageResource(R.drawable.speed_sign_60);
               break;
           case "Μέγιστη ταχύτητα 70km/h":
               setSpeedLimit(70);
+              viewSign.setImageResource(R.drawable.speed_sign_70);
               break;
           case "Μέγιστη ταχύτητα 80km/h":
               setSpeedLimit(80);
+              viewSign.setImageResource(R.drawable.speed_sign_80);
               break;
           case "Μέγιστη ταχύτητα 90km/h":
               setSpeedLimit(90);
+              viewSign.setImageResource(R.drawable.speed_sign_90);
               break;
           case "Μέγιστη ταχύτητα 100km/h":
               setSpeedLimit(100);
+              viewSign.setImageResource(R.drawable.speed_sign_100);
               break;
           case "Μέγιστη ταχύτητα 110km/h":
               setSpeedLimit(110);
+              viewSign.setImageResource(R.drawable.speed_sign_110);
               break;
           case "Μέγιστη ταχύτητα 120km/h":
               setSpeedLimit(120);
+              viewSign.setImageResource(R.drawable.speed_sign_120);
               break;
           default:
               break;
@@ -495,9 +510,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         if (crop != null) {
             try {
-                ImageView view = findViewById(R.id.signImg);
                 crop = prepareImageForClassification(crop);
-                view.setImageBitmap(crop);
+
 
                 // Initialization
                 ImageClassifier.ImageClassifierOptions options =
